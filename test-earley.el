@@ -73,8 +73,12 @@
 
 (setq rules (make-hash-table :test 'equal))
 (setq term (make-terminal :word "Test" :class "noun"))
-(setq lexicon (make-hash-table :test 'equal))
-(push lexicon (gethash (terminal-word term) lexicon))
+(setq dictionary (make-hash-table :test 'equal))
+(push dictionary (gethash (terminal-word term) dictionary))
+(setq lexicon (make-lexicon :dictionary dictionary :part-of-speech "noun"))
+
+(assert-equal "noun" (lexicon-part-of-speech lexicon))
+(lexicon-lookup "Test" lexicon)
 
 (note "Earley parsing")
 
@@ -84,7 +88,19 @@
 (push add_rhs (gethash "S" rules))
 (setq g (make-grammar :rules rules))
 
-;; (earley-parse "Test" g lexicon)
+(setq c (make-chart))
+(setq chart-listing (make-chart-listing))
+(add-chart (make-chart) chart-listing)
+(add-chart (make-chart) chart-listing)
+(enqueue (make-state :condition "G"
+		     :subtree (list "S")
+		     :dot-index 0)
+	 (nth 0 (chart-listing-charts chart-listing)))
 
+
+(setq p (earley-parse "Test" g lexicon))
+(assert-t p)
+(print-chart-listing chart-listing)
+(chart-listing->trees chart-listing)
 
 (end-tests)

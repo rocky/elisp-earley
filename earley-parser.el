@@ -6,9 +6,7 @@
 (load-relative "./objects")
 (load-relative "./terminal")
 
-(defmethod predictor ((state state)
-		      (chart-listing chart-listing)
-		      (grammar grammar))
+(defun predictor (state chart-listing grammar)
   "Predict possible successor states based on the grammar. As a side-effect, add
  these states to the chart that this state belong to."
   (let ((B (next-cat state))
@@ -27,7 +25,7 @@
 					    chart-listing)))
 		 new-state))))
 
-(defmethod scanner ((state state)
+(cl-defmethod scanner ((state state)
 		    (words list)
 		    (chart-listing chart-listing)
 		    (lexicon lexicon))
@@ -43,7 +41,7 @@ is find, into the current chart."
 	      word (lexicon-lookup word lexicon)))
     (when (cl-member B (lexicon-lookup word lexicon)
 		  :test (function (lambda (b terminal)
-			    (funcall *string-comparer*
+			    (funcall 'equal
 				     b (terminal-class terminal)))))
       (let ((new-state (make-state :condition B
 				   :subtree (list word)
@@ -67,7 +65,7 @@ chart."
     (loop for prev-state
        in (chart-states (nth j (chart-listing-charts chart-listing)))
        when (let ((A (next-cat prev-state)))
-	      (when (funcall *string-comparer* A B)
+	      (when (funcall 'equal A B)
 		(when (> *earley-debug* 3)
 		  (format
 		   t "    completer found the state: %s to match %s"
@@ -93,18 +91,18 @@ chart."
 (defun earley-parse (sentence grammar lexicon &optional start-symbol)
   "Convert a string of words into a chart conforming to the grammar."
   (let ((words (remove "" (split-string sentence "[ \t\n]+")))
-	(start-sym (or start-symbol "S"))
         (chart-listing (make-chart-listing)))
 
+    (unless start-symbol (setq start-symbol "S"))
     ;; Initialize charts, one chart per word in the sentence
     (loop for i from 0 to (length words)
        do (add-chart (make-chart) chart-listing))
 
-    ;; FIXME check that G is not in grammar but start-sym is!
+    ;; FIXME check that G is not in grammar but start-symbol is!
 
     ;; Start off by enqueuing a dummy state in the first chart
     (enqueue (make-state :condition "G"
-			 :subtree (list start-sym)
+			 :subtree (list start-symbol)
 			 :dot-index 0)
              (nth 0 (chart-listing-charts chart-listing)))
 
@@ -126,7 +124,7 @@ chart."
 		    (cond ((and (incomplete? state)
 				(not (cl-member (next-cat state)
 					     (lexicon-part-of-speech lexicon)
-					     :test equal)))
+					     :test 'equal)))
 			   (when (> *earley-debug* 1)
 			     (message "predicting..."))
 			   (predictor state chart-listing grammar))

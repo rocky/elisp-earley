@@ -5,6 +5,10 @@
 (require 'cl)
 (require 'load-relative)
 
+(defvar *earley-debug* 3
+  "Turns on parser debugging. 0 is no debugging. 4 is the
+  maxiumum amount of debugging output" )
+
 ;;;; Representation of context-free grammar
 ;;;;---------------------------------------
 (defstruct grammar
@@ -21,7 +25,7 @@
   (dictionary (make-hash-table :test 'equal))
   (part-of-speech nil))
 
-(defmethod lexicon-lookup ((word string) (lexicon lexicon))
+(defun lexicon-lookup (word lexicon)
   (gethash word (lexicon-dictionary lexicon)))
 
 ;;;; representation of state
@@ -44,7 +48,7 @@
   ;; used for backtracing when creating a tree.
   (source-states))
 
-(defmethod format-state ((state state))
+(cl-defmethod format-state ((state state))
   (let ((condition (state-condition state))
         (subtree (state-subtree state))
         (dot (state-dot state)))
@@ -55,18 +59,18 @@
             (state-constituent-index state)
 	    (state-dot-index state))))
 
-(defmethod incomplete? ((state state))
+(cl-defmethod incomplete? ((state state))
   "Returns whether or not there is anything left of the subtree behind the dot."
   (not (= (state-dot state) (length (state-subtree state)))))
 
-(defmethod next-cat ((state state))
+(cl-defmethod next-cat ((state state))
   "Returns the next category of 'state'"
   (let ((subtree (state-subtree state))
         (dot (state-dot state)))
     (when (> (length subtree) dot)
       (nth dot subtree))))
 
-(defmethod state->tree ((state state))
+(cl-defmethod state->tree ((state state))
   "Creates a tree from a chart-listing object containting charts"
   (if (null (state-source-states state))
     (list (state-condition state) (first (state-subtree state)))
@@ -80,13 +84,13 @@
 (defstruct chart
   (states))
 
-(defmethod enqueue ((state state) (chart chart))
-  (if (cl-member state (chart-states chart) :test *string-comparer*)
+(defun enqueue (state chart)
+  (if (cl-member state (chart-states chart) :test 'equal)
       (when (> *earley-debug* 3)
 	(message "  the state %s is already in the chart" state))
       (setf (chart-states chart) (append (chart-states chart) (list state)))))
 
-(defmethod print-object ((chart chart)(s stream))
+(cl-defmethod print-chart (chart)
   (message "#CHART:")
   (loop for state in (chart-states chart)
      do (message "    %s" state)))
@@ -97,21 +101,22 @@
 (defstruct chart-listing
   (charts))
 
-(defmethod add-chart ((chart chart) (chart-listing chart-listing))
+(defun add-chart (chart chart-listing)
   (push chart (chart-listing-charts chart-listing)))
 
-(defmethod print-object ((chart-listing chart-listing)(s stream))
-  (format s "#CHART-LISTING:")
+(defun print-chart-listing (chart-listing)
+  (message "#CHART-LISTING:")
   (loop for chart in (chart-listing-charts chart-listing)
      and index from 0
      do (message "  %s. %s" index chart)))
 
-(defmethod chart-listing->trees ((chart-listing chart-listing))
+(defun chart-listing->trees (chart-listing &optional start-symbol)
   "Return a list of trees created by following each successful parse in the last
  chart of 'chart-listings'"
+  (unless start-symbol (setq start-symbol "S"))
   (loop for state in (chart-states
 		      (first (last (chart-listing-charts chart-listing))))
-     when (and (funcall *string-comparer* (state-condition state) "S")
+     when (and (funcall 'equal (state-condition state) start-symbol)
 	       (= (state-constituent-index state) 0)
 	       (= (state-dot-index state)
 		  (- (length (chart-listing-charts chart-listing)) 1))
