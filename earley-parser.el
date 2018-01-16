@@ -20,8 +20,8 @@
 				  :constituent-index j
 				  :dot-index j)))
 		 (when (> *earley-debug* 2)
-		   (earley-msg (format "  predictor enqueuing\n\t%s\n  into chart %s"
-				       (format-state new-state) j)))
+		   (earley-msg (format "  shifting new state into chart %d\n\t%s"
+				       j (format-state new-state))))
 
 		 (enqueue new-state (nth j (chart-listing-charts
 					    chart-listing)))
@@ -56,8 +56,8 @@
 				   :dot-index (+ j 1))))
         (when (> *earley-debug* 2)
 	  (earley-msg
-	   (format "  scanner enqueuing\n\t%s\n  into chart %d if new"
-		   (format-state new-state) (+ j 1))))
+	   (format "  scanner enqueuing into chart %d if new\n\t%s"
+		   (+ j 1) (format-state new-state))))
         (enqueue
 	 new-state (nth (+ j 1) (chart-listing-charts chart-listing)))))))
 
@@ -89,8 +89,8 @@ chart."
 							 prev-state)))))
 		 (when (> *earley-debug* 2)
 		   (earley-msg
-		    (format "  completer enqueuing:\n\t%s\n  into chart %d if new"
-			    (format-state new-state) k)))
+		    (format "  reduction into chart %d if new:\n\t%s"
+			    k (format-state new-state))))
 		 (enqueue
 		  new-state (nth k (chart-listing-charts chart-listing)))
 		 new-state))))
@@ -122,14 +122,14 @@ chart."
        do (progn
 	    (when (> *earley-debug* 0)
 	      (earley-msg
-	       (format "---- processing chart %s ----" chart-index)))
+	       (format "---- Processing Chart %s ----" chart-index)))
 	    (loop for state-index from 0
 	       until (>= state-index (length (chart-states chart)))
 	       do (let ((state (nth state-index (chart-states chart))))
 		    (when (> *earley-debug* 1)
 		      (earley-msg
-		       (format "Considering%s state:\n\t%s"
-			       (if (incomplete? state) " incomplete" "")
+		       (format "Considering%s rule:\n\t%s"
+			       (if (incomplete? state) " unfinished" "")
 			       (format-state state))))
 		      ;; (earley-msg
 		      ;;  (format "  follow symbol of this%s state is %s"
@@ -140,7 +140,7 @@ chart."
 					     (lexicon-part-of-speech lexicon)
 					     :test 'equal)))
 			   (when (> *earley-debug* 1)
-			     (earley-msg "predicting..."))
+			     (earley-msg "Predicting..."))
 			   (predictor state chart-listing grammar))
 			  ((and (incomplete? state)
 				(cl-member (follow-symbol state)
@@ -151,11 +151,11 @@ chart."
 					       (chart-listing-charts
 						chart-listing))))
 			     (when (> *earley-debug* 1)
-			       (earley-msg "scanning..."))
+			       (earley-msg "Scanning..."))
 			     (scanner state words chart-listing lexicon)))
 			  (t
 			   (when (> *earley-debug* 1)
-			     (earley-msg "completing..."))
+			     (earley-msg "Reductions..."))
 			   (completer state chart-listing)))))
 	    (when (> *earley-debug* 0)
 	      (earley-msg ""))))

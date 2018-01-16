@@ -34,30 +34,34 @@
 (defstruct state
   ;; the "head" of the state
   (condition '? :type string)
+
   ;; a tree (= list) representing an allowed sequence of successors for the
   ;; condition.
   (subtree)
+
   ;; indicates where the dot should be relative to this subtree
-  ;; (whats is _observed_ vs what is _expected_).
+  ;; (what is _observed_ vs. what is _expected_).
   (dot 0)
+
   ;; index in sentence where the first in the sequence of
   ;; allowed successors should be.
   (constituent-index 0)
+
   ;; index relative to the sentence for where the dot should be.
   (dot-index 0)
-  ;; find out which previous state led to this state. This is
+
+  ;; When set, which previous state led to this state. This is
   ;; used for backtracing when creating a tree.
-  (source-states))
+  (source-states nil))
 
 (cl-defmethod format-state ((state state))
   (let ((condition (state-condition state))
         (subtree (state-subtree state))
         (dot (state-dot state)))
-    (format "%s -> %s . %s ; [%s, %s]"
+    (format "%s -> %s . %s ; (last token is %d)"
             condition
 	    (string-join (subseq subtree 0 dot) " ")
 	    (string-join (subseq subtree dot (length subtree)) " ")
-            (state-constituent-index state)
 	    (state-dot-index state))))
 
 (cl-defmethod incomplete? ((state state))

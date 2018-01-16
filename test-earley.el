@@ -53,7 +53,7 @@
  		    :dot 2
  		    :constituent-index 1
  		    :dot-index 3))
-(assert-equal "add -> expr1 PLUS . expr2 ; [1, 3]" (format-state s))
+(assert-equal "add -> expr1 PLUS . expr2 ; (last token is 3)" (format-state s))
 (assert-t (incomplete? s))
 (assert-equal (follow-symbol s) "expr2")
 
@@ -66,7 +66,7 @@
 
 (assert-nil (follow-symbol s))
 
-(assert-equal "add -> expr1 PLUS expr2 .  ; [1, 3]" (format-state s))
+(assert-equal "add -> expr1 PLUS expr2 .  ; (last token is 3)" (format-state s))
 (assert-nil (incomplete? s))
 
 ;; ------------------------------------------------
@@ -108,14 +108,23 @@
 (setq start_rhs '("noun") )
 (push start_rhs (gethash "S" rules))
 
-(setq g (make-grammar :rules rules))
+(setq grammar (make-grammar :rules rules))
 
-(setq p (earley-parse "" g lexicon))
+;; Pparse with sentence "Test" which happens to be a noun:
+(setq chart-listing (earley-parse "" grammar lexicon))
+(assert-equal
+   chart-listing
+   (make-chart-listing
+    :charts
+    (list (make-chart
+	   :states (list (make-state :condition "G" :subtree '("S"))
+			 (make-state :condition "S" :subtree '("noun"))))))
+   "Null sentence parse states")
+(print-chart-listing chart-listing)
 (chart-listing->trees chart-listing)
-(assert-t p)
 
-;; Now parse with a Test which happens to be a noun:
-(setq chart-listing (earley-parse "Test" g lexicon))
+;; Now parse with sentence "Test" which happens to be a noun:
+(setq chart-listing (earley-parse "Test" grammar lexicon))
 (assert-t chart-listing)
 
 (print-chart-listing chart-listing)
