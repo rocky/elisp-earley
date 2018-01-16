@@ -21,18 +21,18 @@
 
 (setq add_rhs '("expr1" "PLUS" "expr2") )
 (push add_rhs (gethash "add" rules))
-(setq g (make-grammar :rules rules))
+(setq grammar (make-grammar :rules rules))
 
-(assert-equal (list add_rhs) (grammar-productions "add" g))
+(assert-equal (list add_rhs) (grammar-productions "add" grammar))
 
 ;; Add another rule for another nonterminal
 (setq sub_rhs '("expr1" "MINUS" "expr2") )
 (push sub_rhs (gethash "sub" rules))
-(setq g (make-grammar :rules rules))
+(setq grammar (make-grammar :rules rules))
 
 ;; See that we have both grammar productions
-(assert-equal (list add_rhs) (grammar-productions "add" g))
-(assert-equal (list sub_rhs) (grammar-productions "sub" g))
+(assert-equal (list add_rhs) (grammar-productions "add" grammar))
+(assert-equal (list sub_rhs) (grammar-productions "sub" grammar))
 
 
 ;; Add another rule to the first nonterminal and see that that
@@ -40,10 +40,10 @@
 
 (setq add_rhs2 '("expr1") )
 (push add_rhs2 (gethash "add" rules))
-(setq g (make-grammar :rules rules))
+(setq grammar (make-grammar :rules rules))
 
-(assert-equal (list add_rhs2 add_rhs) (grammar-productions "add" g))
-(assert-equal (list sub_rhs) (grammar-productions "sub" g))
+(assert-equal (list add_rhs2 add_rhs) (grammar-productions "add" grammar))
+(assert-equal (list sub_rhs) (grammar-productions "sub" grammar))
 
 ;;-------------------------------------------------------------
 (note "Earley state tracking")
@@ -72,19 +72,18 @@
 ;; ------------------------------------------------
 (note "lexicon")
 
-(setq rules (make-hash-table :test 'equal))
-
-(setq dictionary (make-hash-table :test 'equal))
 (setq part-of-speech nil)
+
+(setq token-dict (make-hash-table :test 'equal))
 
 (setq term (make-terminal :word "Test" :class "noun"))
 (assert-equal "Test: noun" (format-terminal term))
 (assert-equal "(Test: noun)" (format-terminal-list (list term)))
 
 (pushnew (terminal-class term) part-of-speech :test 'equal)
-(push term (gethash (terminal-word term) dictionary))
+(push term (gethash (terminal-word term) token-dict))
 
-(setq lexicon (make-lexicon :dictionary dictionary :part-of-speech part-of-speech))
+(setq lexicon (make-lexicon :dictionary token-dict :part-of-speech part-of-speech))
 
 (assert-equal '("noun") (lexicon-part-of-speech lexicon))
 (lexicon-lookup "Test" lexicon)
