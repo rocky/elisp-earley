@@ -102,6 +102,7 @@ chart."
 
     (earley-msg-clear)
     (unless start-symbol (setq start-symbol "S"))
+    ;; (setf (chart-listing-start-symbol chart-listing) start-symbol)
     ;; Initialize charts, one chart per word in the sentence
     (loop for i from 0 to (length words)
        do (add-chart (make-chart) chart-listing))

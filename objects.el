@@ -94,25 +94,20 @@
 ;;;; Representation of chart listings
 ;;;;---------------------------------
 (defstruct chart-listing
+  ;; (start-symbol :type string)
   (charts))
 
 (defun add-chart (chart chart-listing)
   (push chart (chart-listing-charts chart-listing)))
 
-;; (cl-defmethod format-chart ((charts charts))
-;;   (concat "(" (mapconcat
-;;      'format-state charts ", ") ")"))
-
-(defun format-chart (chart)
-  (concat "(" (mapconcat
-	       'format-state (chart-states chart) ", ") ")"))
-
-(defun print-chart-listing (chart-listing)
-  (earley-msg "#CHART-LISTING:")
-  (loop for chart in (chart-listing-charts chart-listing)
+(defun print-chart-listing (chart-listing &optional final)
+  (earley-msg "CHART-LISTING:")
+  (loop for charts in (chart-listing-charts chart-listing)
      and index from 0
-     do (earley-msg
-	 (format " %2d. %s" index (format-chart chart)))))
+     do
+     (earley-msg (format " %2d." index))
+     (loop for state in (chart-states charts)
+	   do (earley-msg (format "     %s" (format-state state))))))
 
 (defun chart-listing->trees (chart-listing &optional start-symbol)
   "Return a list of trees created by following each successful parse in the last
@@ -120,7 +115,7 @@
   (unless start-symbol (setq start-symbol "S"))
   (loop for state in (chart-states
 		      (first (last (chart-listing-charts chart-listing))))
-     when (and (funcall 'equal (state-condition state) start-symbol)
+     when (and (equal (state-condition state) start-symbol)
 	       (= (state-constituent-index state) 0)
 	       (= (state-dot-index state)
 		  (- (length (chart-listing-charts chart-listing)) 1))

@@ -115,8 +115,8 @@
 (assert-t p)
 
 ;; Now parse with a Test which happens to be a noun:
-(setq p (earley-parse "Test" g lexicon))
-(assert-t p)
+(setq chart-listing (earley-parse "Test" g lexicon))
+(assert-t chart-listing)
 
 (print-chart-listing chart-listing)
 (chart-listing->trees chart-listing)
