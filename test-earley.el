@@ -48,7 +48,7 @@
 ;;-------------------------------------------------------------
 (note "Earley state tracking")
 
-(setq s (make-state :condition "add"
+(setq s (make-state :lhs "add"
  		    :subtree '("expr1" "PLUS" "expr2")
  		    :dot 2
  		    :constituent-index 1
@@ -58,7 +58,7 @@
 (assert-equal (follow-symbol s) "expr2")
 
 
-(setq s (make-state :condition "add"
+(setq s (make-state :lhs "add"
  		    :subtree '("expr1" "PLUS" "expr2")
  		    :dot 3
  		    :constituent-index 1
@@ -93,7 +93,7 @@
 (setq chart-listing (make-chart-listing))
 (add-chart (make-chart) chart-listing)
 (add-chart (make-chart) chart-listing)
-(enqueue (make-state :condition "G"
+(enqueue (make-state :lhs "G"
 		     :subtree (list "S")
 		     :dot-index 0)
 	 (nth 0 (chart-listing-charts chart-listing)))
@@ -117,17 +117,20 @@
    (make-chart-listing
     :charts
     (list (make-chart
-	   :states (list (make-state :condition "G" :subtree '("S"))
-			 (make-state :condition "S" :subtree '("noun"))))))
+	   :states (list (make-state :lhs "G" :subtree '("S"))
+			 (make-state :lhs "S" :subtree '("noun"))))))
    "Null sentence parse states")
 (print-chart-listing chart-listing)
-(chart-listing->trees chart-listing)
+(assert-nil (chart-listing->trees chart-listing)
+	    "Null sentence should produce nil (no tree)")
 
 ;; Now parse with sentence "Test" which happens to be a noun:
 (setq chart-listing (earley-parse "Test" grammar lexicon))
 (assert-t chart-listing)
 
 (print-chart-listing chart-listing)
-(chart-listing->trees chart-listing)
+(setq result (chart-listing->trees chart-listing))
+(assert-equal result '(("S" ("noun" "Test")))
+	      "Correct parse of single derivation")
 
 (end-tests)

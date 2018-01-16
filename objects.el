@@ -29,14 +29,18 @@
 (defun lexicon-lookup (word lexicon)
   (gethash word (lexicon-dictionary lexicon)))
 
-;;;; representation of state
-;;;;------------------------
-(defstruct state
-  ;; the "head" of the state
-  (condition '? :type string)
+;;;; representation of a parse state
+;;;;--------------------------------
 
-  ;; a tree (= list) representing an allowed sequence of successors for the
-  ;; condition.
+;; A parse state has embedded in it a grammar rule along with information
+;; about how far the rule has progressed (the dot), its position
+;; in the input sequence of tokens, and information to piece together
+;; a parse tree (the parent state that caused this rule to get added).
+(defstruct state
+  ;; The left-hand nonterminal symbol of the rule of the state
+  (lhs '? :type string)
+
+  ;; The right hand side (= list) for the rule of the state
   (subtree)
 
   ;; indicates where the dot should be relative to this subtree
@@ -55,11 +59,11 @@
   (source-states nil))
 
 (cl-defmethod format-state ((state state))
-  (let ((condition (state-condition state))
+  (let ((lhs (state-lhs state))
         (subtree (state-subtree state))
         (dot (state-dot state)))
     (format "%s -> %s . %s ; (last token is %d)"
-            condition
+            lhs
 	    (string-join (subseq subtree 0 dot) " ")
 	    (string-join (subseq subtree dot (length subtree)) " ")
 	    (state-dot-index state))))
@@ -78,8 +82,8 @@
 (cl-defmethod state->tree ((state state))
   "Creates a tree from a chart-listing object containting charts"
   (if (null (state-source-states state))
-    (list (state-condition state) (first (state-subtree state)))
-    (cons (state-condition state)
+    (list (state-lhs state) (first (state-subtree state)))
+    (cons (state-lhs state)
           (reverse (loop for state in (state-source-states state)
                          collect (state->tree state))))))
 
@@ -119,7 +123,7 @@
   (unless start-symbol (setq start-symbol "S"))
   (loop for state in (chart-states
 		      (first (last (chart-listing-charts chart-listing))))
-     when (and (equal (state-condition state) start-symbol)
+     when (and (equal (state-lhs state) start-symbol)
 	       (= (state-constituent-index state) 0)
 	       (= (state-dot-index state)
 		  (- (length (chart-listing-charts chart-listing)) 1))

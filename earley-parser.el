@@ -14,7 +14,7 @@
         (j (state-dot-index state)))
     (loop for production in (grammar-productions B grammar)
        collect (let ((new-state
-		      (make-state :condition B
+		      (make-state :lhs B
 				  :subtree production
 				  :dot 0
 				  :constituent-index j
@@ -49,7 +49,7 @@
 	       (format-terminal-list (lexicon-lookup word lexicon)))))
     (when (cl-member follow (lexicon-lookup word lexicon)
 		  :test 'follow-match?)
-      (let ((new-state (make-state :condition follow
+      (let ((new-state (make-state :lhs follow
 				   :subtree (list word)
 				   :dot 1
 				   :constituent-index j
@@ -66,7 +66,7 @@
 state's symbol at this dot-index with the dot moved one step
 forward. As a side-effect, enqueue the states in the current
 chart."
-  (let ((B (state-condition state))
+  (let ((B (state-lhs state))
         (j (state-constituent-index state))
         (k (state-dot-index state)))
     (loop for prev-state
@@ -78,7 +78,7 @@ chart."
 				      (format-state prev-state) state)))
 		t))
        collect (let ((new-state (make-state
-				 :condition (state-condition prev-state)
+				 :lhs (state-lhs prev-state)
 				 :subtree (state-subtree prev-state)
 				 :dot (+ (state-dot prev-state) 1)
 				 :constituent-index (state-constituent-index
@@ -110,7 +110,7 @@ chart."
     ;; FIXME check that G is not in grammar but start-symbol is!
 
     ;; Start off by enqueuing a dummy state in the first chart
-    (enqueue (make-state :condition "G"
+    (enqueue (make-state :lhs "G"
 			 :subtree (list start-symbol)
 			 :dot-index 0)
              (nth 0 (chart-listing-charts chart-listing)))
@@ -131,10 +131,6 @@ chart."
 		       (format "Considering%s rule:\n\t%s"
 			       (if (incomplete? state) " unfinished" "")
 			       (format-state state))))
-		      ;; (earley-msg
-		      ;;  (format "  follow symbol of this%s state is %s"
-		      ;; 	       (if (incomplete? state) " (incomplete)" "")
-		      ;; 	       (follow-symbol state))))
 		    (cond ((and (incomplete? state)
 				(not (cl-member (follow-symbol state)
 					     (lexicon-part-of-speech lexicon)
