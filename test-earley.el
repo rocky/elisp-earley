@@ -7,6 +7,7 @@
 ;; Load file to force the most recent read. And don't use bytecode.
 (load-file "./objects.el")
 (load-file "./terminal.el")
+(load-file "./earley-parser.el")
 
 (test-simple-start)
 
@@ -54,7 +55,7 @@
  		    :dot-index 3))
 (assert-equal "add -> expr1 PLUS . expr2 ; [1, 3]" (format-state s))
 (assert-t (incomplete? s))
-(assert-equal (next-cat s) "expr2")
+(assert-equal (follow-symbol s) "expr2")
 
 
 (setq s (make-state :condition "add"
@@ -63,7 +64,7 @@
  		    :constituent-index 1
  		    :dot-index 3))
 
-(assert-nil (next-cat s))
+(assert-nil (follow-symbol s))
 
 (assert-equal "add -> expr1 PLUS expr2 .  ; [1, 3]" (format-state s))
 (assert-nil (incomplete? s))
@@ -72,21 +73,18 @@
 (note "lexicon")
 
 (setq rules (make-hash-table :test 'equal))
-(setq term (make-terminal :word "Test" :class "noun"))
+
 (setq dictionary (make-hash-table :test 'equal))
-(push dictionary (gethash (terminal-word term) dictionary))
-(setq lexicon (make-lexicon :dictionary dictionary :part-of-speech "noun"))
+(setq part-of-speech nil)
 
-(assert-equal "noun" (lexicon-part-of-speech lexicon))
+(setq term (make-terminal :word "Test" :class "noun"))
+(pushnew (terminal-class term) part-of-speech :test 'equal)
+(push term (gethash (terminal-word term) dictionary))
+
+(setq lexicon (make-lexicon :dictionary dictionary :part-of-speech part-of-speech))
+
+(assert-equal '("noun") (lexicon-part-of-speech lexicon))
 (lexicon-lookup "Test" lexicon)
-
-(note "Earley parsing")
-
-;; Create a grammar with single rule and see that we can get that back.
-
-(setq add_rhs '("a"))
-(push add_rhs (gethash "S" rules))
-(setq g (make-grammar :rules rules))
 
 (setq c (make-chart))
 (setq chart-listing (make-chart-listing))
@@ -98,6 +96,22 @@
 	 (nth 0 (chart-listing-charts chart-listing)))
 
 
+(note "Earley parsing")
+
+;; Create a grammar with single rule:
+;;  S ::= noun
+
+(setq rules (make-hash-table :test 'equal))
+(setq start_rhs '("noun") )
+(push start_rhs (gethash "S" rules))
+
+(setq g (make-grammar :rules rules))
+
+(setq p (earley-parse "" g lexicon))
+(chart-listing->trees chart-listing)
+(assert-t p)
+
+;; Now parse with a Test which happens to be a noun:
 (setq p (earley-parse "Test" g lexicon))
 (assert-t p)
 (print-chart-listing chart-listing)

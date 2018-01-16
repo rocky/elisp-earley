@@ -4,6 +4,7 @@
 (require 'eieio)
 (require 'cl)
 (require 'load-relative)
+(require 'subr-x)
 
 (defvar *earley-debug* 3
   "Turns on parser debugging. 0 is no debugging. 4 is the
@@ -63,8 +64,8 @@
   "Returns whether or not there is anything left of the subtree behind the dot."
   (not (= (state-dot state) (length (state-subtree state)))))
 
-(cl-defmethod next-cat ((state state))
-  "Returns the next category of 'state'"
+(cl-defmethod follow-symbol ((state state))
+  "Returns the following symbol (a nonterminal or terminal) 'state'"
   (let ((subtree (state-subtree state))
         (dot (state-dot state)))
     (when (> (length subtree) dot)
