@@ -13,6 +13,7 @@
 ;;;; Representation of context-free grammar
 ;;;;---------------------------------------
 (defstruct grammar
+  (start-symbol)
   (rules (make-hash-table :test 'equal)))
 
 (cl-defmethod grammar-productions ((nonterminal string) (grammar grammar))
@@ -102,7 +103,7 @@
 ;;;; Representation of chart listings
 ;;;;---------------------------------
 (defstruct chart-listing
-  ;; (start-symbol :type string)
+  (start-symbol)
   (charts))
 
 (defun add-chart (chart chart-listing)
@@ -117,17 +118,17 @@
      (loop for state in (chart-states charts)
 	   do (earley-msg (format "     %s" (format-state state))))))
 
-(defun chart-listing->trees (chart-listing &optional start-symbol)
+(defun chart-listing->trees (chart-listing)
   "Return a list of trees created by following each successful parse in the last
  chart of 'chart-listings'"
-  (unless start-symbol (setq start-symbol "S"))
-  (loop for state in (chart-states
-		      (first (last (chart-listing-charts chart-listing))))
-     when (and (equal (state-lhs state) start-symbol)
-	       (= (state-constituent-index state) 0)
-	       (= (state-dot-index state)
-		  (- (length (chart-listing-charts chart-listing)) 1))
-	       (not (incomplete? state)))
-     collect (state->tree state)))
+  (let ((start-symbol (chart-listing-start-symbol chart-listing)))
+    (loop for state in (chart-states
+			(first (last (chart-listing-charts chart-listing))))
+	  when (and (equal (state-lhs state) start-symbol)
+		    (= (state-constituent-index state) 0)
+		    (= (state-dot-index state)
+		       (- (length (chart-listing-charts chart-listing)) 1))
+		    (not (incomplete? state)))
+	  collect (state->tree state))))
 
 (provide-me "earley-parser:")

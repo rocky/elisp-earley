@@ -95,13 +95,17 @@ chart."
 		  new-state (nth k (chart-listing-charts chart-listing)))
 		 new-state))))
 
-(defun earley-parse (sentence grammar lexicon &optional start-symbol)
-  "Convert a string of words into a chart conforming to the grammar."
-  (let ((words (remove "" (split-string sentence "[ \t\n]+")))
-        (chart-listing (make-chart-listing)))
+(defun earley-parse (sentence grammar lexicon)
+  "Parse the input string of words into a chart conforming to the grammar.
+   Afterwards you can check to see if the parse covered the entire string."
+  (let* ((words (remove "" (split-string sentence "[ \t\n]+")))
+	 (start-symbol (grammar-start-symbol grammar))
+	 (chart-listing (make-chart-listing :start-symbol start-symbol)))
+
+    (assert (stringp start-symbol) nil
+		     "Grammar should have a nonnil start-symbol set")
 
     (earley-msg-clear)
-    (unless start-symbol (setq start-symbol "S"))
     ;; (setf (chart-listing-start-symbol chart-listing) start-symbol)
     ;; Initialize charts, one chart per word in the sentence
     (loop for i from 0 to (length words)

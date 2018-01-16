@@ -108,18 +108,19 @@
 (setq start_rhs '("noun") )
 (push start_rhs (gethash "S" rules))
 
-(setq grammar (make-grammar :rules rules))
+(setq grammar (make-grammar :rules rules :start-symbol "S"))
 
-;; Pparse with sentence "Test" which happens to be a noun:
+;; Parse with sentence "Test" which happens to be a noun:
 (setq chart-listing (earley-parse "" grammar lexicon))
 (assert-equal
-   chart-listing
-   (make-chart-listing
-    :charts
-    (list (make-chart
-	   :states (list (make-state :lhs "G" :subtree '("S"))
-			 (make-state :lhs "S" :subtree '("noun"))))))
-   "Null sentence parse states")
+ (make-chart-listing
+  :start-symbol "S"
+  :charts
+  (list (make-chart
+	 :states (list (make-state :lhs "G" :subtree '("S"))
+		       (make-state :lhs "S" :subtree '("noun"))))))
+ chart-listing
+ "Null sentence parse states")
 (print-chart-listing chart-listing)
 (assert-nil (chart-listing->trees chart-listing)
 	    "Null sentence should produce nil (no tree)")
