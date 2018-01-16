@@ -6,7 +6,7 @@
 
 ;; Load file to force the most recent read. And don't use bytecode.
 (load-file "./objects.el")
-(load-file "./terminal.el")
+(load-file "./tokens.el")
 (load-file "./earley-parser.el")
 
 (test-simple-start)
@@ -78,6 +78,9 @@
 (setq part-of-speech nil)
 
 (setq term (make-terminal :word "Test" :class "noun"))
+(assert-equal "Test: noun" (format-terminal term))
+(assert-equal "(Test: noun)" (format-terminal-list (list term)))
+
 (pushnew (terminal-class term) part-of-speech :test 'equal)
 (push term (gethash (terminal-word term) dictionary))
 
@@ -114,6 +117,7 @@
 ;; Now parse with a Test which happens to be a noun:
 (setq p (earley-parse "Test" g lexicon))
 (assert-t p)
+
 (print-chart-listing chart-listing)
 (chart-listing->trees chart-listing)
 

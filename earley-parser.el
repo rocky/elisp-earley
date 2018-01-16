@@ -4,7 +4,7 @@
 (require 'cl)
 (require 'load-relative)
 (load-relative "./objects")
-(load-relative "./terminal")
+(load-relative "./tokens")
 (load-relative "./msg")
 
 (defun predictor (state chart-listing grammar)
@@ -20,8 +20,8 @@
 				  :constituent-index j
 				  :dot-index j)))
 		 (when (> *earley-debug* 2)
-		   (earley-msg (format "  predictor enqueuing %s into chart %s"
-				       new-state j)))
+		   (earley-msg (format "  predictor enqueuing\n\t%s\n  into chart %s"
+				       (format-state new-state) j)))
 
 		 (enqueue new-state (nth j (chart-listing-charts
 					    chart-listing)))
@@ -38,27 +38,26 @@
  post-categories for the current word. As a side effect, enqueue
  a new state corresponding to th is find, into the current
  chart."
-  (let* ((B (follow-symbol state))
+  (let* ((follow (follow-symbol state))
          (j (state-dot-index state))
          (word (nth j words))
 	 (mess))
     (when (> *earley-debug* 2)
-      (setq mess
-	    (concat
-	     (format "  scanner is considering if %s is a member of " B)
-	     (format "the word-class list for \"%s\" (= %s)"
-		     word (lexicon-lookup word lexicon))))
-      (earley-msg mess))
-    (when (cl-member B (lexicon-lookup word lexicon)
+      (earley-msg
+       (format "  scanner checking if \"%s\" is in %s"
+	       follow
+	       (format-terminal-list (lexicon-lookup word lexicon)))))
+    (when (cl-member follow (lexicon-lookup word lexicon)
 		  :test 'follow-match?)
-      (let ((new-state (make-state :condition B
+      (let ((new-state (make-state :condition follow
 				   :subtree (list word)
 				   :dot 1
 				   :constituent-index j
 				   :dot-index (+ j 1))))
         (when (> *earley-debug* 2)
-	  (earley-msg (format "  scanner attempting to enqueue %s into chart %s"
-			      new-state (+ j 1))))
+	  (earley-msg
+	   (format "  scanner enqueuing\n\t%s\n  into chart %d if new"
+		   (format-state new-state) (+ j 1))))
         (enqueue
 	 new-state (nth (+ j 1) (chart-listing-charts chart-listing)))))))
 
@@ -75,8 +74,8 @@ chart."
        when (let ((A (follow-symbol prev-state)))
 	      (when (equal A B)
 		(when (> *earley-debug* 3)
-		  (earley-msg (format "  completer found the state: %s to match %s"
-				      prev-state state)))
+		  (earley-msg (format "  completer found the state:\n\t%s to match %s"
+				      (format-state prev-state) state)))
 		t))
        collect (let ((new-state (make-state
 				 :condition (state-condition prev-state)
@@ -90,8 +89,8 @@ chart."
 							 prev-state)))))
 		 (when (> *earley-debug* 2)
 		   (earley-msg
-		    (format "  completer attempting to enqueue %s into chart %s"
-			    new-state k)))
+		    (format "  completer enqueuing:\n\t%s\n  into chart %d if new"
+			    (format-state new-state) k)))
 		 (enqueue
 		  new-state (nth k (chart-listing-charts chart-listing)))
 		 new-state))))
@@ -128,11 +127,13 @@ chart."
 	       do (let ((state (nth state-index (chart-states chart))))
 		    (when (> *earley-debug* 1)
 		      (earley-msg
-		       (format "  considering state: %s" state))
-		      (earley-msg
-		       (format "  follow symbol of this%s state is %s"
-			       (if (incomplete? state) " (incomplete)" "")
-			       (follow-symbol state))))
+		       (format "Considering%s state:\n\t%s"
+			       (if (incomplete? state) " incomplete" "")
+			       (format-state state))))
+		      ;; (earley-msg
+		      ;;  (format "  follow symbol of this%s state is %s"
+		      ;; 	       (if (incomplete? state) " (incomplete)" "")
+		      ;; 	       (follow-symbol state))))
 		    (cond ((and (incomplete? state)
 				(not (cl-member (follow-symbol state)
 					     (lexicon-part-of-speech lexicon)
@@ -157,6 +158,7 @@ chart."
 			   (completer state chart-listing)))))
 	    (when (> *earley-debug* 0)
 	      (earley-msg ""))))
+    (earley-msg "==============================================")
     chart-listing))
 
 (provide 'earley-parser)

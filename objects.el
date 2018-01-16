@@ -3,8 +3,8 @@
 
 (require 'eieio)
 (require 'cl)
-(require 'load-relative)
 (require 'subr-x)
+(require 'load-relative)
 
 (defvar *earley-debug* 3
   "Turns on parser debugging. 0 is no debugging. 4 is the
@@ -88,14 +88,8 @@
 (defun enqueue (state chart)
   (if (cl-member state (chart-states chart) :test 'equal)
       (when (> *earley-debug* 3)
-	(message "  the state %s is already in the chart" state))
+	(earley-msg (format "  the state %s is already in the chart" state)))
       (setf (chart-states chart) (append (chart-states chart) (list state)))))
-
-(cl-defmethod print-chart (chart)
-  (message "#CHART:")
-  (loop for state in (chart-states chart)
-     do (message "    %s" state)))
-
 
 ;;;; Representation of chart listings
 ;;;;---------------------------------
@@ -105,11 +99,20 @@
 (defun add-chart (chart chart-listing)
   (push chart (chart-listing-charts chart-listing)))
 
+;; (cl-defmethod format-chart ((charts charts))
+;;   (concat "(" (mapconcat
+;;      'format-state charts ", ") ")"))
+
+(defun format-chart (chart)
+  (concat "(" (mapconcat
+	       'format-state (chart-states chart) ", ") ")"))
+
 (defun print-chart-listing (chart-listing)
-  (message "#CHART-LISTING:")
+  (earley-msg "#CHART-LISTING:")
   (loop for chart in (chart-listing-charts chart-listing)
      and index from 0
-     do (message "  %s. %s" index chart)))
+     do (earley-msg
+	 (format " %2d. %s" index (format-chart chart)))))
 
 (defun chart-listing->trees (chart-listing &optional start-symbol)
   "Return a list of trees created by following each successful parse in the last
