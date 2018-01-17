@@ -6,7 +6,7 @@
   "Name of buffer to put parser debug messages"
   )
 
-(defun earley:msg-clear (&optional test-info test-start-msg)
+(defun earley:msg-clear()
   "Initialize and reset everything before parsing"
 
   (interactive)

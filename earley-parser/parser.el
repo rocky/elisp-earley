@@ -32,6 +32,10 @@
 (defun follow-match?(follow-symbol token)
     (equal follow-symbol (token-class token)))
 
+(defun token?(symbol lexicon)
+  (cl-member symbol (lexicon-token-alphabet lexicon)
+	     :test 'equal))
+
 (cl-defmethod scanner ((state state)
 		    (tokens list)
 		    (chart-listing chart-listing)
@@ -110,7 +114,7 @@ chart."
     ;; (setf (chart-listing-start-symbol chart-listing) start-symbol)
     ;; Initialize charts, one chart per word in the sentence
     (loop for i from 0 to (length tokens)
-       do (add-chart (make-chart) chart-listing))
+       do (earley:add-chart (make-chart) chart-listing))
 
     ;; FIXME check that G is not in grammar but start-symbol is!
 
@@ -137,16 +141,12 @@ chart."
 			       (if (incomplete? state) " unfinished" "")
 			       (format-state state))))
 		    (cond ((and (incomplete? state)
-				(not (cl-member (follow-symbol state)
-					     (lexicon-part-of-speech lexicon)
-					     :test 'equal)))
+				(not (token? (follow-symbol state) lexicon)))
 			   (when (> *earley-debug* 1)
 			     (earley:msg "Predicting..."))
 			   (predictor state chart-listing grammar))
 			  ((and (incomplete? state)
-				(cl-member (follow-symbol state)
-					(lexicon-part-of-speech lexicon)
-					:test 'equal))
+				(token? (follow-symbol state) lexicon))
 			   (unless (eq chart (first
 					      (last
 					       (chart-listing-charts

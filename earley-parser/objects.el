@@ -14,6 +14,7 @@
 
 (declare-function earley:msg 'early-parser:msg)
 
+
 ;; FIXME turn into a defcustom
 (defvar *earley-debug* 3
   "Turns on parser debugging. 0 is no debugging. 4 is the
@@ -57,7 +58,21 @@
   ;; token. In scanning the hash value is the value field of the
   ;; token, while the key is the token class name.
   (token-dict (make-hash-table :test 'equal))
-  (part-of-speech nil))
+
+  ;; token-alphabet is a list of all tokens that can appear in the input
+  ;; This list should be exactly the set of keys in token-dict.
+  (token-alphabet nil))
+
+;; (defun new-lexicon(token-dict)
+;;   "Runs `make-lexicon()' but ensures that `token-alphabet' is set correctly"
+;;   (let ((token-alphabet))
+;;     (maphash
+;;      (lambda (key value)
+;;        (loop for token in (token-class value)
+;; 	     do (pushnew (token-class value) token-alphabet))
+;;      token-dict)
+;;     (make-lexicon :token-dict token-dict
+;; 		  :token-alphabet token-alphabet)))
 
 (defun lexicon-lookup (token lexicon)
   (gethash token (lexicon-token-dict lexicon)))
@@ -138,10 +153,10 @@
   (start-symbol nil :type string)
   (charts nil :type list))
 
-(cl-defmethod add-chart ((chart chart) (chart-listing chart-listing))
+(cl-defmethod earley:add-chart ((chart chart) (chart-listing chart-listing))
   (push chart (chart-listing-charts chart-listing)))
 
-(cl-defmethod print-chart-listing ((chart-listing chart-listing))
+(cl-defmethod earley:print-chart-listing ((chart-listing chart-listing))
   (earley:msg "CHART-LISTING:")
   (loop for charts in (chart-listing-charts chart-listing)
      and index from 0
@@ -150,7 +165,7 @@
      (loop for state in (chart-states charts)
 	   do (earley:msg (format "     %s" (format-state state))))))
 
-(cl-defmethod chart-listing->trees ((chart-listing chart-listing))
+(cl-defmethod earley:chart-listing->trees ((chart-listing chart-listing))
   "Return a list of trees created by following each successful parse in the last
  chart of 'chart-listings'"
   (let ((start-symbol (chart-listing-start-symbol chart-listing)))

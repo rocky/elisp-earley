@@ -74,7 +74,7 @@
 ;; ------------------------------------------------
 (note "lexicon")
 
-(setq part-of-speech nil)
+(setq token-alphabet nil)
 
 (setq token-dict (make-hash-table :test 'equal))
 
@@ -82,18 +82,18 @@
 (assert-equal "Test: noun" (format-token token))
 (assert-equal "(Test: noun)" (format-token-list (list token)))
 
-(pushnew (token-class token) part-of-speech :test 'equal)
+(pushnew (token-class token) token-alphabet :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
-(setq lexicon (make-lexicon :token-dict token-dict :part-of-speech part-of-speech))
+(setq lexicon (make-lexicon :token-dict token-dict :token-alphabet token-alphabet))
 
-(assert-equal '("noun") (lexicon-part-of-speech lexicon))
+(assert-equal '("noun") (lexicon-token-alphabet lexicon))
 (lexicon-lookup "Test" lexicon)
 
 (setq c (make-chart))
 (setq chart-listing (make-chart-listing))
-(add-chart (make-chart) chart-listing)
-(add-chart (make-chart) chart-listing)
+(earley:add-chart (make-chart) chart-listing)
+(earley:add-chart (make-chart) chart-listing)
 (earley:enqueue (make-state :lhs "G"
 			    :rhs (list "S")
 			    :dot-index 0)
@@ -123,16 +123,16 @@
 		       (make-state :lhs "S" :rhs '("noun"))))))
  chart-listing
  "Null sentence parse states")
-(print-chart-listing chart-listing)
-(assert-nil (chart-listing->trees chart-listing)
+(earley:print-chart-listing chart-listing)
+(assert-nil (earley:chart-listing->trees chart-listing)
 	    "Null sentence should produce nil (no tree)")
 
 ;; Now parse with sentence "Test" which happens to be a noun:
 (setq chart-listing (earley-parse "Test" grammar lexicon))
 (assert-t chart-listing)
 
-(print-chart-listing chart-listing)
-(setq result (chart-listing->trees chart-listing))
+(earley:print-chart-listing chart-listing)
+(setq result (earley:chart-listing->trees chart-listing))
 (assert-equal result '(("S" ("noun" "Test")))
 	      "Correct parse of single derivation")
 

@@ -13,7 +13,7 @@
 (test-simple-start)
 
 (note "lexicon")
-(setq part-of-speech nil)
+(setq token-alphabet nil)
 
 ;; token-dict is the set of tokens we can see. The key is a token
 ;; (class) name while the value is specific instance of that
@@ -27,22 +27,23 @@
 (setq number-token token)
 (assert-equal "1: NUMBER" (format-token token))
 
-(pushnew (token-class token) part-of-speech :test 'equal)
+(pushnew (token-class token) token-alphabet :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
 (setq token (make-token :value "+" :class "OP"))
 (assert-equal "+: OP" (format-token token))
-(assert-equal '("OP" "NUMBER") (pushnew (token-class token) part-of-speech :test 'equal))
-(pushnew (token-class token) part-of-speech :test 'equal)
+(assert-equal '("OP" "NUMBER") (pushnew (token-class token) token-alphabet :test 'equal))
+(pushnew (token-class token) token-alphabet :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
 (setq token (make-token :value "-" :class "OP"))
-(pushnew (token-class token) part-of-speech :test 'equal)
+(pushnew (token-class token) token-alphabet :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
-(setq lexicon (make-lexicon :token-dict token-dict :part-of-speech part-of-speech))
+(setq lexicon
+      (make-lexicon :token-dict token-dict :token-alphabet token-alphabet))
 
-(assert-equal '("OP" "NUMBER") (lexicon-part-of-speech lexicon))
+(assert-equal '("OP" "NUMBER") (lexicon-token-alphabet lexicon))
 (assert-equal (list number-token) (lexicon-lookup "1" lexicon))
 
 ;; 'rules-dict' will contain our all of our grammar rules
@@ -58,31 +59,31 @@
 (setq grammar (make-grammar :rules-dict rules-dict :start-symbol "S"))
 
 (setq chart-listing (earley-parse "1" grammar lexicon))
-(print-chart-listing chart-listing)
+(earley:print-chart-listing chart-listing)
 
 (assert-equal
  '(("S"
     ("NUMBER" "1")))
- (chart-listing->trees chart-listing)
+ (earley:chart-listing->trees chart-listing)
  )
 
 (setq chart-listing (earley-parse "" grammar lexicon))
-(print-chart-listing chart-listing)
-(assert-equal nil (chart-listing->trees chart-listing))
+(earley:print-chart-listing chart-listing)
+(assert-equal nil (earley:chart-listing->trees chart-listing))
 
 (setq chart-listing (earley-parse "1 + 1" grammar lexicon))
-(print-chart-listing chart-listing)
+(earley:print-chart-listing chart-listing)
 (assert-equal
  '(("S"
     ("S"
      ("NUMBER" "1"))
     ("OP" "+")
     ("NUMBER" "1")))
- (chart-listing->trees chart-listing))
+ (earley:chart-listing->trees chart-listing))
 
 ;; FIXME try a grammar with epsilon transitions
 ;;
-;; (assert-equal '(("S" nil)) (chart-listing->trees chart-listing))
+;; (assert-equal '(("S" nil)) (earley:chart-listing->trees chart-listing))
 
 ;; FiXME: test that this fails
 ;; (setq char-listing (earley-parse "1 + 1 -" grammar lexicon))
