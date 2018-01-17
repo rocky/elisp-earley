@@ -3,12 +3,12 @@
 ;;;;---------------------------------------------
 
 (require 'eieio)
-(require 'cl)
+(require 'cl-lib)
 (require 'subr-x)
 (require 'load-relative)
 
 ;; you may want to customize this.
-(defstruct terminal
+(cl-defstruct terminal
   (class)
   (gender)
   (word))

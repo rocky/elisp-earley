@@ -1,3 +1,6 @@
+;;;  -*- lexical-binding: t -*-
+;;; I/O routines and Messaging system
+(require 'load-relative)
 
 (defvar earley-debug-buffer "*Earley-Debug-Log*"
   "Name of buffer to put parser debug messages"
@@ -24,4 +27,4 @@
     (switch-to-buffer nil)
   ))
 
-(provide 'earley-msg)
+(provide-me "earley-parser:")

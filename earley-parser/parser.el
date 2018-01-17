@@ -1,11 +1,13 @@
 ;;;  -*- lexical-binding: t -*-
 
 (require 'eieio)
-(require 'cl)
+(require 'cl-lib)
 (require 'load-relative)
 (load-relative "./objects")
 (load-relative "./tokens")
 (load-relative "./msg")
+
+(defvar *earley-debug*)
 
 (defun predictor (state chart-listing grammar)
   "Predict possible successor states based on the grammar. As a side-effect, add
@@ -40,8 +42,7 @@
  chart."
   (let* ((follow (follow-symbol state))
          (j (state-dot-index state))
-         (word (nth j words))
-	 (mess))
+         (word (nth j words)))
     (when (> *earley-debug* 2)
       (earley-msg
        (format "  scanner checking if \"%s\" is in %s"
@@ -162,4 +163,4 @@ chart."
     (earley-msg "==============================================")
     chart-listing))
 
-(provide 'earley-parser)
+(provide-me "earley-parser:")
