@@ -17,6 +17,8 @@
 
 (setq token-dict (make-hash-table :test 'equal))
 
+;; Add terminal symbols NUMBER with 1 and OP with +, -
+
 (setq token (make-terminal :word "1" :class "NUMBER"))
 (setq number-token token)
 (assert-equal "1: NUMBER" (format-terminal token))
@@ -39,26 +41,37 @@
 (assert-equal '("OP" "NUMBER") (lexicon-part-of-speech lexicon))
 (assert-equal (list number-token) (lexicon-lookup "1" lexicon))
 
+;; Add grammar rules
+;;   S ::= NUMBER | S OP NUMBER |
 (setq rules (make-hash-table :test 'equal))
 
-;; FIXME: start here...
-(setq s_rhs '(("NUMBER")
-	      ("NUMBER OP NUMBER")
-	      ()
-	      ))
+(push '("NUMBER") (gethash "S" rules))
+(push '("S" "OP" "NUMBER") (gethash "S" rules))
+(push nil (gethash "S" rules))
 
 (setq grammar (make-grammar :rules rules :start-symbol "S"))
 
 (setq chart-listing (earley-parse "1" grammar lexicon))
 (print-chart-listing chart-listing)
-(chart-listing->trees chart-listing)
+
+(assert-equal
+ '(("S"
+    ("NUMBER" "1")))
+ (chart-listing->trees chart-listing)
+ )
 
 (setq chart-listing (earley-parse "" grammar lexicon))
 (print-chart-listing chart-listing)
-(chart-listing->trees chart-listing)
+(assert-equal '(("S" nil)) (chart-listing->trees chart-listing))
 
 (setq chart-listing (earley-parse "1 + 1" grammar lexicon))
 (print-chart-listing chart-listing)
-(chart-listing->trees chart-listing)
+(assert-equal
+ '(("S"
+    ("S"
+     ("NUMBER" "1"))
+    ("OP" "+")
+    ("NUMBER" "1")))
+ (chart-listing->trees chart-listing))
 
 (end-tests)
