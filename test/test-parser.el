@@ -15,6 +15,10 @@
 (note "lexicon")
 (setq part-of-speech nil)
 
+;; token-dict is the set of tokens we can see. The key is a token
+;; (class) name while the value is specific instance of that
+;; token. In scanning the hash value is the value field of the
+;; token, while the key is the token class name.
 (setq token-dict (make-hash-table :test 'equal))
 
 ;; Add terminal symbols NUMBER with 1 and OP with +, -
@@ -36,7 +40,7 @@
 (pushnew (token-class token) part-of-speech :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
-(setq lexicon (make-lexicon :dictionary token-dict :part-of-speech part-of-speech))
+(setq lexicon (make-lexicon :token-dict token-dict :part-of-speech part-of-speech))
 
 (assert-equal '("OP" "NUMBER") (lexicon-part-of-speech lexicon))
 (assert-equal (list number-token) (lexicon-lookup "1" lexicon))

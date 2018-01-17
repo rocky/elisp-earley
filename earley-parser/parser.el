@@ -22,29 +22,29 @@
 				  :constituent-index j
 				  :dot-index j)))
 		 (when (> *earley-debug* 2)
-		   (earley-msg (format "  shifting new state into chart %d\n\t%s"
+		   (earley:msg (format "  shifting new state into chart %d\n\t%s"
 				       j (format-state new-state))))
 
-		 (enqueue new-state (nth j (chart-listing-charts
-					    chart-listing)))
+		 (earley:enqueue new-state (nth j (chart-listing-charts
+						   chart-listing)))
 		 new-state))))
 
 (defun follow-match?(follow-symbol token)
     (equal follow-symbol (token-class token)))
 
 (cl-defmethod scanner ((state state)
-		    (words list)
+		    (tokens list)
 		    (chart-listing chart-listing)
 		    (lexicon lexicon))
   "Check if the next symbol of `state' is a member of the
- post-categories for the current word. As a side effect, enqueue
+ post-categories for the current word. As a side effect, queue
  a new state corresponding to th is find, into the current
  chart."
   (let* ((follow (follow-symbol state))
          (j (state-dot-index state))
-         (word (nth j words)))
+         (word (nth j tokens)))
     (when (> *earley-debug* 2)
-      (earley-msg
+      (earley:msg
        (format "  scanner checking if \"%s\" is in %s"
 	       follow
 	       (format-token-list (lexicon-lookup word lexicon)))))
@@ -56,16 +56,16 @@
 				   :constituent-index j
 				   :dot-index (+ j 1))))
         (when (> *earley-debug* 2)
-	  (earley-msg
+	  (earley:msg
 	   (format "  scanner enqueuing into chart %d if new\n\t%s"
 		   (+ j 1) (format-state new-state))))
-        (enqueue
+        (earley:enqueue
 	 new-state (nth (+ j 1) (chart-listing-charts chart-listing)))))))
 
 (defun completer (state chart-listing)
   "Find and return a list of the previous states that expect this
 state's symbol at this dot-index with the dot moved one step
-forward. As a side-effect, enqueue the states in the current
+forward. As a side-effect, queue the states in the current
 chart."
   (let ((B (state-lhs state))
         (j (state-constituent-index state))
@@ -75,7 +75,7 @@ chart."
        when (let ((A (follow-symbol prev-state)))
 	      (when (equal A B)
 		(when (> *earley-debug* 3)
-		  (earley-msg (format "  completer found the state:\n\t%s to match %s"
+		  (earley:msg (format "  completer found the state:\n\t%s to match %s"
 				      (format-state prev-state) state)))
 		t))
        collect (let ((new-state (make-state
@@ -89,36 +89,36 @@ chart."
 							(state-source-states
 							 prev-state)))))
 		 (when (> *earley-debug* 2)
-		   (earley-msg
+		   (earley:msg
 		    (format "  reduction into chart %d if new:\n\t%s"
 			    k (format-state new-state))))
-		 (enqueue
+		 (earley:enqueue
 		  new-state (nth k (chart-listing-charts chart-listing)))
 		 new-state))))
 
 (defun earley-parse (sentence grammar lexicon)
-  "Parse the input string of words into a chart conforming to the grammar.
+  "Parse the input string of tokens into a chart conforming to the grammar.
    Afterwards you can check to see if the parse covered the entire string."
-  (let* ((words (remove "" (split-string sentence "[ \t\n]+")))
+  (let* ((tokens (remove "" (split-string sentence "[ \t\n]+")))
 	 (start-symbol (grammar-start-symbol grammar))
 	 (chart-listing (make-chart-listing :start-symbol start-symbol)))
 
     (assert (stringp start-symbol) nil
 		     "Grammar should have a nonnil start-symbol set")
 
-    (earley-msg-clear)
+    (earley:msg-clear)
     ;; (setf (chart-listing-start-symbol chart-listing) start-symbol)
     ;; Initialize charts, one chart per word in the sentence
-    (loop for i from 0 to (length words)
+    (loop for i from 0 to (length tokens)
        do (add-chart (make-chart) chart-listing))
 
     ;; FIXME check that G is not in grammar but start-symbol is!
 
     ;; Start off by enqueuing a dummy state in the first chart
-    (enqueue (make-state :lhs "G"
-			 :rhs (list start-symbol)
-			 :dot-index 0)
-             (nth 0 (chart-listing-charts chart-listing)))
+    (earley:enqueue (make-state :lhs "G"
+				:rhs (list start-symbol)
+				:dot-index 0)
+		    (nth 0 (chart-listing-charts chart-listing)))
 
     ;; Then for each chart (= one per word)...
     (loop for chart in (chart-listing-charts chart-listing)
@@ -126,13 +126,13 @@ chart."
        ;; And for each possible state in that chart
        do (progn
 	    (when (> *earley-debug* 0)
-	      (earley-msg
+	      (earley:msg
 	       (format "---- Processing Chart %s ----" chart-index)))
 	    (loop for state-index from 0
 	       until (>= state-index (length (chart-states chart)))
 	       do (let ((state (nth state-index (chart-states chart))))
 		    (when (> *earley-debug* 1)
-		      (earley-msg
+		      (earley:msg
 		       (format "Considering%s rule:\n\t%s"
 			       (if (incomplete? state) " unfinished" "")
 			       (format-state state))))
@@ -141,7 +141,7 @@ chart."
 					     (lexicon-part-of-speech lexicon)
 					     :test 'equal)))
 			   (when (> *earley-debug* 1)
-			     (earley-msg "Predicting..."))
+			     (earley:msg "Predicting..."))
 			   (predictor state chart-listing grammar))
 			  ((and (incomplete? state)
 				(cl-member (follow-symbol state)
@@ -152,15 +152,15 @@ chart."
 					       (chart-listing-charts
 						chart-listing))))
 			     (when (> *earley-debug* 1)
-			       (earley-msg "Scanning..."))
-			     (scanner state words chart-listing lexicon)))
+			       (earley:msg "Scanning..."))
+			     (scanner state tokens chart-listing lexicon)))
 			  (t
 			   (when (> *earley-debug* 1)
-			     (earley-msg "Reductions..."))
+			     (earley:msg "Reductions..."))
 			   (completer state chart-listing)))))
 	    (when (> *earley-debug* 0)
-	      (earley-msg ""))))
-    (earley-msg "==============================================")
+	      (earley:msg ""))))
+    (earley:msg "==============================================")
     chart-listing))
 
 (provide-me "earley-parser:")

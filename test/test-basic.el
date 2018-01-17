@@ -85,7 +85,7 @@
 (pushnew (token-class token) part-of-speech :test 'equal)
 (push token (gethash (token-value token) token-dict))
 
-(setq lexicon (make-lexicon :dictionary token-dict :part-of-speech part-of-speech))
+(setq lexicon (make-lexicon :token-dict token-dict :part-of-speech part-of-speech))
 
 (assert-equal '("noun") (lexicon-part-of-speech lexicon))
 (lexicon-lookup "Test" lexicon)
@@ -94,10 +94,10 @@
 (setq chart-listing (make-chart-listing))
 (add-chart (make-chart) chart-listing)
 (add-chart (make-chart) chart-listing)
-(enqueue (make-state :lhs "G"
-		     :rhs (list "S")
-		     :dot-index 0)
-	 (nth 0 (chart-listing-charts chart-listing)))
+(earley:enqueue (make-state :lhs "G"
+			    :rhs (list "S")
+			    :dot-index 0)
+		(nth 0 (chart-listing-charts chart-listing)))
 
 
 (note "Earley parsing")

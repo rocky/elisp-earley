@@ -12,7 +12,7 @@
 
 (load-relative "./msg")
 
-(declare-function earley-msg 'early-parser:msg)
+(declare-function earley:msg 'early-parser:msg)
 
 ;; FIXME turn into a defcustom
 (defvar *earley-debug* 3
@@ -51,11 +51,16 @@
 ;;;; Representation of lexicon
 ;;;;--------------------------
 (cl-defstruct lexicon
-  (dictionary (make-hash-table :test 'equal))
+
+  ;; token-dict is the set of tokens we can see. The key is a token
+  ;; (class) name while the value is specific instance of that
+  ;; token. In scanning the hash value is the value field of the
+  ;; token, while the key is the token class name.
+  (token-dict (make-hash-table :test 'equal))
   (part-of-speech nil))
 
 (defun lexicon-lookup (token lexicon)
-  (gethash token (lexicon-dictionary lexicon)))
+  (gethash token (lexicon-token-dict lexicon)))
 
 ;;;; representation of a parse state
 ;;;;--------------------------------
@@ -73,14 +78,14 @@
 
   ;; indicates where the dot should be relative to the rule's rhs
   ;; (what is _observed_ vs. what is _expected_).
-  (dot 0 :type integerp)
+  (dot 0 :type integer)
 
   ;; index in sentence where the first in the sequence of
   ;; allowed successors should be.
-  (constituent-index 0 :type integer p)
+  (constituent-index 0 :type integer)
 
   ;; index relative to the sentence for where the dot should be.
-  (dot-index 0 :integerp)
+  (dot-index 0 :type integer)
 
   ;; When set, which previous state led to this state. This is
   ;; used for backtracing when creating a tree.
@@ -121,10 +126,10 @@
 (cl-defstruct chart
   (states nil :type list))
 
-(defun enqueue (state chart)
+(cl-defmethod earley:enqueue ((state state) (chart chart))
   (if (cl-member state (chart-states chart) :test 'equal)
       (when (> *earley-debug* 3)
-	(earley-msg (format "  the state %s is already in the chart" state)))
+	(earley:msg (format "  the state %s is already in the chart" state)))
       (setf (chart-states chart) (append (chart-states chart) (list state)))))
 
 ;;;; Representation of chart listings
@@ -137,13 +142,13 @@
   (push chart (chart-listing-charts chart-listing)))
 
 (cl-defmethod print-chart-listing ((chart-listing chart-listing))
-  (earley-msg "CHART-LISTING:")
+  (earley:msg "CHART-LISTING:")
   (loop for charts in (chart-listing-charts chart-listing)
      and index from 0
      do
-     (earley-msg (format " %2d." index))
+     (earley:msg (format " %2d." index))
      (loop for state in (chart-states charts)
-	   do (earley-msg (format "     %s" (format-state state))))))
+	   do (earley:msg (format "     %s" (format-state state))))))
 
 (cl-defmethod chart-listing->trees ((chart-listing chart-listing))
   "Return a list of trees created by following each successful parse in the last

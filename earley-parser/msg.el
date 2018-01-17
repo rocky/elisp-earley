@@ -6,7 +6,7 @@
   "Name of buffer to put parser debug messages"
   )
 
-(defun earley-msg-clear (&optional test-info test-start-msg)
+(defun earley:msg-clear (&optional test-info test-start-msg)
   "Initialize and reset everything before parsing"
 
   (interactive)
@@ -19,7 +19,7 @@
   (unless noninteractive
     (message "Earley debug log initialized")))
 
-(defun earley-msg(msg &optional no-newline)
+(defun earley:msg(msg &optional no-newline)
   (switch-to-buffer earley-debug-buffer)
   (let ((inhibit-read-only t))
     (insert msg)
