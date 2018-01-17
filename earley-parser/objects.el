@@ -2,31 +2,42 @@
 ;;; Objects used by the Earley parser
 
 ;; cl is used instead of cl-lib to handle "loop" construct
-(require 'cl)
+(with-no-warnings
+   (require 'cl))
 
+(require 'cl-lib)
 (require 'eieio)
 (require 'subr-x)
 (require 'load-relative)
 
+(load-relative "./msg")
+
+(declare-function earley-msg 'early-parser:msg)
+
+;; FIXME turn into a defcustom
 (defvar *earley-debug* 3
   "Turns on parser debugging. 0 is no debugging. 4 is the
   maxiumum amount of debugging output" )
 
 ;;;; Representation of context-free grammar
 ;;;;---------------------------------------
-(defstruct grammar
-  (start-symbol)
+(cl-defstruct grammar
+  (start-symbol nil :type string)
 
-  ;; 'rules-dict' contains grammar rules as a hash table indexed by LHS
-  ;; The key is the LHS and the value is a list of RHS for the key's LHS
+  ;; 'rules-dict' contains grammar rules as a hash table indexed by
+  ;; LHS nonterminals.  The key is the left-hand side of the rule and
+  ;; the value is a list of right-hand-sides for the nonterminal.
+
   ;; For example for the grammar:
   ;;    S ::= NUMBER | S OP NUMBER |
+
   ;; the rules-dict would be:
+
   ;; #s(hash-table ...
   ;; ("S"
   ;;  (nil
-  ;; 	("S" "OP" "NUMBER")
-  ;; 	("NUMBER"))))
+  ;;   ("S" "OP" "NUMBER")
+  ;;   ("NUMBER"))))
   ;;
   ;; Note the use of the nil list to represent an epsilon transition
 
@@ -39,12 +50,12 @@
 
 ;;;; Representation of lexicon
 ;;;;--------------------------
-(defstruct lexicon
+(cl-defstruct lexicon
   (dictionary (make-hash-table :test 'equal))
   (part-of-speech nil))
 
-(defun lexicon-lookup (word lexicon)
-  (gethash word (lexicon-dictionary lexicon)))
+(defun lexicon-lookup (token lexicon)
+  (gethash token (lexicon-dictionary lexicon)))
 
 ;;;; representation of a parse state
 ;;;;--------------------------------
@@ -53,7 +64,7 @@
 ;; about how far the rule has progressed (the dot), its position
 ;; in the input sequence of tokens, and information to piece together
 ;; a parse tree (the parent state that caused this rule to get added).
-(defstruct state
+(cl-defstruct state
   ;; The left-hand nonterminal symbol of the grammar rule of the state
   (lhs '? :type string)
 
@@ -81,8 +92,8 @@
         (dot (state-dot state)))
     (format "%s -> %s . %s ; (last token is %d)"
             lhs
-	    (string-join (subseq rhs 0 dot) " ")
-	    (string-join (subseq rhs dot (length rhs)) " ")
+	    (string-join (cl-subseq rhs 0 dot) " ")
+	    (string-join (cl-subseq rhs dot (length rhs)) " ")
 	    (state-dot-index state))))
 
 (cl-defmethod incomplete? ((state state))
@@ -107,8 +118,8 @@
 
 ;;;; Representation of charts
 ;;;;-------------------------
-(defstruct chart
-  (states))
+(cl-defstruct chart
+  (states nil :type list))
 
 (defun enqueue (state chart)
   (if (cl-member state (chart-states chart) :test 'equal)
@@ -118,14 +129,14 @@
 
 ;;;; Representation of chart listings
 ;;;;---------------------------------
-(defstruct chart-listing
-  (start-symbol)
-  (charts))
+(cl-defstruct chart-listing
+  (start-symbol nil :type string)
+  (charts nil :type list))
 
-(defun add-chart (chart chart-listing)
+(cl-defmethod add-chart ((chart chart) (chart-listing chart-listing))
   (push chart (chart-listing-charts chart-listing)))
 
-(defun print-chart-listing (chart-listing &optional final)
+(cl-defmethod print-chart-listing ((chart-listing chart-listing))
   (earley-msg "CHART-LISTING:")
   (loop for charts in (chart-listing-charts chart-listing)
      and index from 0
@@ -134,7 +145,7 @@
      (loop for state in (chart-states charts)
 	   do (earley-msg (format "     %s" (format-state state))))))
 
-(defun chart-listing->trees (chart-listing)
+(cl-defmethod chart-listing->trees ((chart-listing chart-listing))
   "Return a list of trees created by following each successful parse in the last
  chart of 'chart-listings'"
   (let ((start-symbol (chart-listing-start-symbol chart-listing)))
