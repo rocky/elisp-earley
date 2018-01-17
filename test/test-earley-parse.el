@@ -6,9 +6,9 @@
 (require 'load-relative)
 
 ;; Load file to force the most recent read. And don't use bytecode.
-(load-file "./objects.el")
-(load-file "./tokens.el")
-(load-file "./earley-parser.el")
+(load-file "../early-parser/objects.el")
+(load-file "../early-parser/tokens.el")
+(load-file "../early-parser/earley-parser.el")
 
 (test-simple-start)
 
