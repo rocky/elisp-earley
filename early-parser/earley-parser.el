@@ -15,7 +15,7 @@
     (loop for production in (grammar-productions B grammar)
        collect (let ((new-state
 		      (make-state :lhs B
-				  :subtree production
+				  :rhs production
 				  :dot 0
 				  :constituent-index j
 				  :dot-index j)))
@@ -50,7 +50,7 @@
     (when (cl-member follow (lexicon-lookup word lexicon)
 		  :test 'follow-match?)
       (let ((new-state (make-state :lhs follow
-				   :subtree (list word)
+				   :rhs (list word)
 				   :dot 1
 				   :constituent-index j
 				   :dot-index (+ j 1))))
@@ -79,7 +79,7 @@ chart."
 		t))
        collect (let ((new-state (make-state
 				 :lhs (state-lhs prev-state)
-				 :subtree (state-subtree prev-state)
+				 :rhs (state-rhs prev-state)
 				 :dot (+ (state-dot prev-state) 1)
 				 :constituent-index (state-constituent-index
 						     prev-state)
@@ -115,7 +115,7 @@ chart."
 
     ;; Start off by enqueuing a dummy state in the first chart
     (enqueue (make-state :lhs "G"
-			 :subtree (list start-symbol)
+			 :rhs (list start-symbol)
 			 :dot-index 0)
              (nth 0 (chart-listing-charts chart-listing)))
 

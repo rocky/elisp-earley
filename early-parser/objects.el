@@ -38,22 +38,22 @@
 ;; in the input sequence of tokens, and information to piece together
 ;; a parse tree (the parent state that caused this rule to get added).
 (defstruct state
-  ;; The left-hand nonterminal symbol of the rule of the state
+  ;; The left-hand nonterminal symbol of the grammar rule of the state
   (lhs '? :type string)
 
-  ;; The right hand side (= list) for the rule of the state
-  (subtree)
+  ;; The right-hand side of the grammar rule of the state
+  (rhs nil :type list)
 
-  ;; indicates where the dot should be relative to this subtree
+  ;; indicates where the dot should be relative to the rule's rhs
   ;; (what is _observed_ vs. what is _expected_).
-  (dot 0)
+  (dot 0 :type integerp)
 
   ;; index in sentence where the first in the sequence of
   ;; allowed successors should be.
-  (constituent-index 0)
+  (constituent-index 0 :type integer p)
 
   ;; index relative to the sentence for where the dot should be.
-  (dot-index 0)
+  (dot-index 0 :integerp)
 
   ;; When set, which previous state led to this state. This is
   ;; used for backtracing when creating a tree.
@@ -61,29 +61,29 @@
 
 (cl-defmethod format-state ((state state))
   (let ((lhs (state-lhs state))
-        (subtree (state-subtree state))
+        (rhs (state-rhs state))
         (dot (state-dot state)))
     (format "%s -> %s . %s ; (last token is %d)"
             lhs
-	    (string-join (subseq subtree 0 dot) " ")
-	    (string-join (subseq subtree dot (length subtree)) " ")
+	    (string-join (subseq rhs 0 dot) " ")
+	    (string-join (subseq rhs dot (length rhs)) " ")
 	    (state-dot-index state))))
 
 (cl-defmethod incomplete? ((state state))
-  "Returns whether or not there is anything left of the subtree behind the dot."
-  (not (= (state-dot state) (length (state-subtree state)))))
+  "Returns whether or not there is anything left of the rhs behind the dot."
+  (not (= (state-dot state) (length (state-rhs state)))))
 
 (cl-defmethod follow-symbol ((state state))
   "Returns the following symbol (a nonterminal or terminal) 'state'"
-  (let ((subtree (state-subtree state))
+  (let ((rhs (state-rhs state))
         (dot (state-dot state)))
-    (when (> (length subtree) dot)
-      (nth dot subtree))))
+    (when (> (length rhs) dot)
+      (nth dot rhs))))
 
 (cl-defmethod state->tree ((state state))
   "Creates a tree from a chart-listing object containting charts"
   (if (null (state-source-states state))
-    (list (state-lhs state) (first (state-subtree state)))
+    (list (state-lhs state) (first (state-rhs state)))
     (cons (state-lhs state)
           (reverse (loop for state in (state-source-states state)
                          collect (state->tree state))))))

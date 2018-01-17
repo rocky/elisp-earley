@@ -19,11 +19,11 @@
 
 ;; Create a grammar with single rule and see that we can get that back.
 
-(setq add_rhs '("expr1" "PLUS" "expr2") )
-(push add_rhs (gethash "add" rules))
+(setq rhs '("expr1" "PLUS" "expr2") )
+(push rhs (gethash "add" rules))
 (setq grammar (make-grammar :rules rules))
 
-(assert-equal (list add_rhs) (grammar-productions "add" grammar))
+(assert-equal (list rhs) (grammar-productions "add" grammar))
 
 ;; Add another rule for another nonterminal
 (setq sub_rhs '("expr1" "MINUS" "expr2") )
@@ -31,25 +31,25 @@
 (setq grammar (make-grammar :rules rules))
 
 ;; See that we have both grammar productions
-(assert-equal (list add_rhs) (grammar-productions "add" grammar))
+(assert-equal (list rhs) (grammar-productions "add" grammar))
 (assert-equal (list sub_rhs) (grammar-productions "sub" grammar))
 
 
 ;; Add another rule to the first nonterminal and see that that
 ;; is there too.
 
-(setq add_rhs2 '("expr1") )
-(push add_rhs2 (gethash "add" rules))
+(setq rhs2 '("expr1") )
+(push rhs2 (gethash "add" rules))
 (setq grammar (make-grammar :rules rules))
 
-(assert-equal (list add_rhs2 add_rhs) (grammar-productions "add" grammar))
+(assert-equal (list rhs2 rhs) (grammar-productions "add" grammar))
 (assert-equal (list sub_rhs) (grammar-productions "sub" grammar))
 
 ;;-------------------------------------------------------------
 (note "Earley state tracking")
 
 (setq s (make-state :lhs "add"
- 		    :subtree '("expr1" "PLUS" "expr2")
+ 		    :rhs '("expr1" "PLUS" "expr2")
  		    :dot 2
  		    :constituent-index 1
  		    :dot-index 3))
@@ -59,7 +59,7 @@
 
 
 (setq s (make-state :lhs "add"
- 		    :subtree '("expr1" "PLUS" "expr2")
+ 		    :rhs '("expr1" "PLUS" "expr2")
  		    :dot 3
  		    :constituent-index 1
  		    :dot-index 3))
@@ -93,7 +93,7 @@
 (add-chart (make-chart) chart-listing)
 (add-chart (make-chart) chart-listing)
 (enqueue (make-state :lhs "G"
-		     :subtree (list "S")
+		     :rhs (list "S")
 		     :dot-index 0)
 	 (nth 0 (chart-listing-charts chart-listing)))
 
@@ -104,20 +104,21 @@
 ;;  S ::= noun
 
 (setq rules (make-hash-table :test 'equal))
-(setq start_rhs '("noun") )
-(push start_rhs (gethash "S" rules))
-
+(setq rhs '("noun") )
+(push rhs (gethash "S" rules))
 (setq grammar (make-grammar :rules rules :start-symbol "S"))
 
-;; Parse with sentence "Test" which happens to be a noun:
+;; Parse the simplest possible thing, null input.
+;; There are no prediction, scanning, or reduction routines
+;; then get called for this
 (setq chart-listing (earley-parse "" grammar lexicon))
 (assert-equal
  (make-chart-listing
   :start-symbol "S"
   :charts
   (list (make-chart
-	 :states (list (make-state :lhs "G" :subtree '("S"))
-		       (make-state :lhs "S" :subtree '("noun"))))))
+	 :states (list (make-state :lhs "G" :rhs '("S"))
+		       (make-state :lhs "S" :rhs '("noun"))))))
  chart-listing
  "Null sentence parse states")
 (print-chart-listing chart-listing)
