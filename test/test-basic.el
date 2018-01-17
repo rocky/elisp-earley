@@ -4,6 +4,7 @@
 (require 'test-simple)
 (require 'load-relative)
 
+
 ;; Load file to force the most recent read. And don't use bytecode.
 (load-file "../earley-parser/objects.el")
 (load-file "../earley-parser/tokens.el")
@@ -14,21 +15,22 @@
 ;;-------------------------------------------------------------
 (note "grammar rule creation")
 
-;; 'rules' will contain our all of our grammar rules
-(setq rules (make-hash-table :test 'equal))
+;; 'rules-dict' will contain our all of our grammar rules
+;; the key is the lhs and the value is a list of RHS for that LHS
+(setq rules-dict (make-hash-table :test 'equal))
 
 ;; Create a grammar with single rule and see that we can get that back.
 
 (setq rhs '("expr1" "PLUS" "expr2") )
-(push rhs (gethash "add" rules))
-(setq grammar (make-grammar :rules rules))
+(push rhs (gethash "add" rules-dict))
+(setq grammar (make-grammar :rules-dict rules-dict))
 
 (assert-equal (list rhs) (grammar-productions "add" grammar))
 
 ;; Add another rule for another nonterminal
 (setq sub_rhs '("expr1" "MINUS" "expr2") )
-(push sub_rhs (gethash "sub" rules))
-(setq grammar (make-grammar :rules rules))
+(push sub_rhs (gethash "sub" rules-dict))
+(setq grammar (make-grammar :rules-dict rules-dict))
 
 ;; See that we have both grammar productions
 (assert-equal (list rhs) (grammar-productions "add" grammar))
@@ -39,8 +41,8 @@
 ;; is there too.
 
 (setq rhs2 '("expr1") )
-(push rhs2 (gethash "add" rules))
-(setq grammar (make-grammar :rules rules))
+(push rhs2 (gethash "add" rules-dict))
+(setq grammar (make-grammar :rules-dict rules-dict))
 
 (assert-equal (list rhs2 rhs) (grammar-productions "add" grammar))
 (assert-equal (list sub_rhs) (grammar-productions "sub" grammar))
@@ -76,12 +78,12 @@
 
 (setq token-dict (make-hash-table :test 'equal))
 
-(setq term (make-terminal :word "Test" :class "noun"))
-(assert-equal "Test: noun" (format-terminal term))
-(assert-equal "(Test: noun)" (format-terminal-list (list term)))
+(setq token (make-token :value "Test" :class "noun"))
+(assert-equal "Test: noun" (format-token token))
+(assert-equal "(Test: noun)" (format-token-list (list token)))
 
-(pushnew (terminal-class term) part-of-speech :test 'equal)
-(push term (gethash (terminal-word term) token-dict))
+(pushnew (token-class token) part-of-speech :test 'equal)
+(push token (gethash (token-value token) token-dict))
 
 (setq lexicon (make-lexicon :dictionary token-dict :part-of-speech part-of-speech))
 
@@ -103,10 +105,10 @@
 ;; Create a grammar with single rule:
 ;;  S ::= noun
 
-(setq rules (make-hash-table :test 'equal))
+(setq rules-dict (make-hash-table :test 'equal))
 (setq rhs '("noun") )
-(push rhs (gethash "S" rules))
-(setq grammar (make-grammar :rules rules :start-symbol "S"))
+(push rhs (gethash "S" rules-dict))
+(setq grammar (make-grammar :rules-dict rules-dict :start-symbol "S"))
 
 ;; Parse the simplest possible thing, null input.
 ;; There are no prediction, scanning, or reduction routines

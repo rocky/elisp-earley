@@ -29,8 +29,8 @@
 					    chart-listing)))
 		 new-state))))
 
-(defun follow-match?(follow-symbol terminal)
-    (equal follow-symbol (terminal-class terminal)))
+(defun follow-match?(follow-symbol token)
+    (equal follow-symbol (token-class token)))
 
 (cl-defmethod scanner ((state state)
 		    (words list)
@@ -47,7 +47,7 @@
       (earley-msg
        (format "  scanner checking if \"%s\" is in %s"
 	       follow
-	       (format-terminal-list (lexicon-lookup word lexicon)))))
+	       (format-token-list (lexicon-lookup word lexicon)))))
     (when (cl-member follow (lexicon-lookup word lexicon)
 		  :test 'follow-match?)
       (let ((new-state (make-state :lhs follow

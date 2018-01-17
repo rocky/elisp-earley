@@ -1,8 +1,10 @@
 ;;;  -*- lexical-binding: t -*-
 ;;; Objects used by the Earley parser
 
-(require 'eieio)
+;; cl is used instead of cl-lib to handle "loop" construct
 (require 'cl)
+
+(require 'eieio)
 (require 'subr-x)
 (require 'load-relative)
 
@@ -14,11 +16,25 @@
 ;;;;---------------------------------------
 (defstruct grammar
   (start-symbol)
-  (rules (make-hash-table :test 'equal)))
+
+  ;; 'rules-dict' contains grammar rules as a hash table indexed by LHS
+  ;; The key is the LHS and the value is a list of RHS for the key's LHS
+  ;; For example for the grammar:
+  ;;    S ::= NUMBER | S OP NUMBER |
+  ;; the rules-dict would be:
+  ;; #s(hash-table ...
+  ;; ("S"
+  ;;  (nil
+  ;; 	("S" "OP" "NUMBER")
+  ;; 	("NUMBER"))))
+  ;;
+  ;; Note the use of the nil list to represent an epsilon transition
+
+  (rules-dict (make-hash-table :test 'equal)))
 
 (cl-defmethod grammar-productions ((nonterminal string) (grammar grammar))
   "Returns the list of right-hand sides for a given nonterminal"
-  (gethash nonterminal (grammar-rules grammar)))
+  (gethash nonterminal (grammar-rules-dict grammar)))
 
 
 ;;;; Representation of lexicon
