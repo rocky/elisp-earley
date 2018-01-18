@@ -108,15 +108,15 @@
 (setq rules-dict (make-hash-table :test 'equal))
 (setq rhs '("noun") )
 (push rhs (gethash "S" rules-dict))
-(setq grammar (make-grammar :rules-dict rules-dict :start-symbol "S"))
+(setq grammar (make-grammar :rules-dict rules-dict :goal-symbol "S"))
 
 ;; Parse the simplest possible thing, null input.
 ;; There are no prediction, scanning, or reduction routines
 ;; then get called for this
-(setq chart-listing (earley-parse "" grammar lexicon))
+(setq chart-listing (earley:parse "" grammar lexicon))
 (assert-equal
  (make-chart-listing
-  :start-symbol "S"
+  :goal-symbol "S"
   :charts
   (list (make-chart
 	 :states (list (make-state :lhs "G" :rhs '("S"))
@@ -128,7 +128,7 @@
 	    "Null sentence should produce nil (no tree)")
 
 ;; Now parse with sentence "Test" which happens to be a noun:
-(setq chart-listing (earley-parse "Test" grammar lexicon))
+(setq chart-listing (earley:parse "Test" grammar lexicon))
 (assert-t chart-listing)
 
 (earley:print-chart-listing chart-listing)

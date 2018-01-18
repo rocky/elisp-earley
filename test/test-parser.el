@@ -4,11 +4,35 @@
 
 (require 'test-simple)
 (require 'load-relative)
+(require 'cl-lib)
 
 ;; Load file to force the most recent read. And don't use bytecode.
 (load-file "../earley-parser/objects.el")
 (load-file "../earley-parser/tokens.el")
 (load-file "../earley-parser/parser.el")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Lots of compiler boilerplate to reduce warnings
+(declare-function make-token   'realgud:tokens)
+(declare-function format-token 'realgud:tokens)
+(declare-function token-class  'realgud:tokens)
+(declare-function token-value  'realgud:tokens)
+(declare-function make-lexicon 'realgud:object)
+(declare-function make-grammar 'realgud:object)
+
+(declare-function earley:print-chart-listing  'earley:parser)
+(declare-function earley:chart-listing->trees 'earley:parser)
+
+(defvar chart-listing)
+(defvar lexicon-dict)
+(defvar my-grammar)
+(defvar my-lexicon)
+(defvar my-token)
+(defvar number-token)
+(defvar rules-dict)
+(defvar token-alphabet)
+(defvar token-dict)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (test-simple-start)
 
@@ -23,28 +47,28 @@
 
 ;; Add terminal symbols NUMBER with 1 and OP with +, -
 
-(setq token (make-token :value "1" :class "NUMBER"))
-(setq number-token token)
-(assert-equal "1: NUMBER" (format-token token))
+(setq my-token (make-token :value "1" :class "NUMBER"))
+(setq number-token my-token)
+(assert-equal "1: NUMBER" (format-token my-token))
 
-(pushnew (token-class token) token-alphabet :test 'equal)
-(push token (gethash (token-value token) token-dict))
+(pushnew (token-class my-token) token-alphabet :test 'equal)
+(push my-token (gethash (token-value my-token) token-dict))
 
-(setq token (make-token :value "+" :class "OP"))
-(assert-equal "+: OP" (format-token token))
-(assert-equal '("OP" "NUMBER") (pushnew (token-class token) token-alphabet :test 'equal))
-(pushnew (token-class token) token-alphabet :test 'equal)
-(push token (gethash (token-value token) token-dict))
+(setq my-token (make-token :value "+" :class "OP"))
+(assert-equal "+: OP" (format-token my-token))
+(assert-equal '("OP" "NUMBER") (pushnew (token-class my-token) token-alphabet :test 'equal))
+(pushnew (token-class my-token) token-alphabet :test 'equal)
+(push my-token (gethash (token-value my-token) token-dict))
 
-(setq token (make-token :value "-" :class "OP"))
-(pushnew (token-class token) token-alphabet :test 'equal)
-(push token (gethash (token-value token) token-dict))
+(setq my-token (make-token :value "-" :class "OP"))
+(pushnew (token-class my-token) token-alphabet :test 'equal)
+(push my-token (gethash (token-value my-token) token-dict))
 
-(setq lexicon
+(setq my-lexicon
       (make-lexicon :token-dict token-dict :token-alphabet token-alphabet))
 
-(assert-equal '("OP" "NUMBER") (lexicon-token-alphabet lexicon))
-(assert-equal (list number-token) (lexicon-lookup "1" lexicon))
+(assert-equal '("OP" "NUMBER") (lexicon-token-alphabet my-lexicon))
+(assert-equal (list number-token) (lexicon-lookup "1" my-lexicon))
 
 ;; 'rules-dict' will contain our all of our grammar rules
 ;; the key is the LHS and the value is a list of RHS for that LHS
@@ -56,9 +80,9 @@
 (push '("S" "OP" "NUMBER") (gethash "S" rules-dict))
 ;; (push nil (gethash "S" rules-dict))
 
-(setq grammar (make-grammar :rules-dict rules-dict :start-symbol "S"))
+(setq my-grammar (make-grammar :rules-dict rules-dict :goal-symbol "S"))
 
-(setq chart-listing (earley-parse "1" grammar lexicon))
+(setq chart-listing (earley:parse "1" my-grammar my-lexicon))
 (earley:print-chart-listing chart-listing)
 
 (assert-equal
@@ -67,11 +91,11 @@
  (earley:chart-listing->trees chart-listing)
  )
 
-(setq chart-listing (earley-parse "" grammar lexicon))
+(setq chart-listing (earley:parse "" my-grammar my-lexicon))
 (earley:print-chart-listing chart-listing)
 (assert-equal nil (earley:chart-listing->trees chart-listing))
 
-(setq chart-listing (earley-parse "1 + 1" grammar lexicon))
+(setq chart-listing (earley:parse "1 + 1" my-grammar my-lexicon))
 (earley:print-chart-listing chart-listing)
 (assert-equal
  '(("S"
@@ -86,10 +110,10 @@
 ;; (assert-equal '(("S" nil)) (earley:chart-listing->trees chart-listing))
 
 ;; FiXME: test that this fails
-;; (setq char-listing (earley-parse "1 + 1 -" grammar lexicon))
+;; (setq char-listing (earley:parse "1 + 1 -" my-grammar my-lexicon))
 
 ;; FiXME: test that this words
-;; (setq char-listing (earley-parse "1 + 1 - 1" grammar lexicon))
+;; (setq char-listing (earley:parse "1 + 1 - 1" my-grammar my-lexicon))
 
 
 (end-tests)

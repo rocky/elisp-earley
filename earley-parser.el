@@ -24,9 +24,9 @@
 
 ;;; Commentary:
 
-;; Jay Earley's parser for Emacs lisp
+;; Jay Earley's context-free grammar parser for Emacs lisp
 ;;
-;; Quick start: https://github.com/elisp-earley
+;; Quick start: https://github.com/rocky/elisp-earley
 ;;
 
 ;;; Code:

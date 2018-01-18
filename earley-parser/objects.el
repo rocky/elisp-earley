@@ -16,14 +16,17 @@
 
 
 ;; FIXME turn into a defcustom
-(defvar *earley-debug* 3
-  "Turns on parser debugging. 0 is no debugging. 4 is the
-  maxiumum amount of debugging output" )
+(defcustom earley:debug 3
+  "This integer variable causes parsing to produce debugging
+  output. 0 is no debugging. 4 is the maxiumum amount of
+  debugging output."
+  :type 'integer
+  :group 'earley)
 
 ;;;; Representation of context-free grammar
 ;;;;---------------------------------------
 (cl-defstruct grammar
-  (start-symbol nil :type string)
+  (goal-symbol nil :type string)
 
   ;; 'rules-dict' contains grammar rules as a hash table indexed by
   ;; LHS nonterminals.  The key is the left-hand side of the rule and
@@ -143,14 +146,14 @@
 
 (cl-defmethod earley:enqueue ((state state) (chart chart))
   (if (cl-member state (chart-states chart) :test 'equal)
-      (when (> *earley-debug* 3)
+      (when (> earley:debug 3)
 	(earley:msg (format "  the state %s is already in the chart" state)))
       (setf (chart-states chart) (append (chart-states chart) (list state)))))
 
 ;;;; Representation of chart listings
 ;;;;---------------------------------
 (cl-defstruct chart-listing
-  (start-symbol nil :type string)
+  (goal-symbol nil :type string)
   (charts nil :type list))
 
 (cl-defmethod earley:add-chart ((chart chart) (chart-listing chart-listing))
@@ -168,10 +171,10 @@
 (cl-defmethod earley:chart-listing->trees ((chart-listing chart-listing))
   "Return a list of trees created by following each successful parse in the last
  chart of 'chart-listings'"
-  (let ((start-symbol (chart-listing-start-symbol chart-listing)))
+  (let ((goal-symbol (chart-listing-goal-symbol chart-listing)))
     (loop for state in (chart-states
 			(first (last (chart-listing-charts chart-listing))))
-	  when (and (equal (state-lhs state) start-symbol)
+	  when (and (equal (state-lhs state) goal-symbol)
 		    (= (state-constituent-index state) 0)
 		    (= (state-dot-index state)
 		       (- (length (chart-listing-charts chart-listing)) 1))
