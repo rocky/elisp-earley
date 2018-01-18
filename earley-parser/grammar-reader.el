@@ -138,18 +138,16 @@ and return a token created from that"
     (make-token :value token-val
 		:class (cdr (assoc ":class" options)))))
 
-;; (defun load-lexicon (pathname)
-;;   "Read all words from a dictionary file into a lexicon and a part of speech."
-;;   (let ((lexicon (make-hash-table :test 'equal))
-;; 	(part-of-speech nil))
-;;     (with-open-file (file pathname :direction :input)
-;;       (loop
-;;        while (< (file-position file) (file-length file))
-;;        do (let ((w (read-lexicon-line file)))
-;; 	    ;; Add (unless existing) the word class to part of speech
-;; 	    (pushnew (terminal-class w) part-of-speech :test *string-comparer*)
-;; 	    ;; Add the word definition to the lexicon
-;; 	    (push w (gethash (terminal-word w) lexicon)))))
-;;     (make-lexicon :dictionary lexicon :part-of-speech part-of-speech)))
+(cl-defmethod earley:load-lexicon-from-string ((str string))
+  "Parse a string into a lexicon object and return that."
+  (let ((lexicon (make-hash-table :test 'equal))
+	(token-alphabet nil))
+    (loop for line in (remove "" (split-string str "[\n]+"))
+	  do (let ((token (earley:parse-lexicon-line line)))
+	    ;; Add (unless existing) the token class to the list of token-classes
+	    (pushnew (token-class token) token-alphabet :test 'equal)
+	    ;; Add the token value and its association to the lexicon
+	    (push token (gethash (token-value token) lexicon))))
+    (make-lexicon :token-dict lexicon :token-alphabet token-alphabet)))
 
 (provide-me "earley-parser:")

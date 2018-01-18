@@ -12,13 +12,30 @@
 
 (test-simple-start)
 
+(defvar book-token)
+(defvar book-token-line)
+(defvar token-dict)
+
 ;;-------------------------------------------------------------
+;; (defun lexicon-equal(a b)
+;;   (and (equal (lexicon-token-dict a) (lexicon-token-dict b))
+;;        (equal (lexicon-token-alphabet a) (lexicon-token-alphabet b))))
+
 (note "grammar lexicon reading")
 
-(assert-equal
- (make-token :value "book"
-	     :class "verb")
- (earley:parse-lexicon-line "book :class verb"))
+(setq book-token (make-token :value "book" :class "verb"))
 
+(assert-equal book-token
+	      (earley:parse-lexicon-line book-token-line))
+
+(setq token-dict (make-hash-table :test 'equal))
+(push book-token (gethash (token-value book-token) token-dict))
+
+;; (lexicon-equal  # assert-equal
+;;  (make-lexicon :token-dict token-dict :token-alphabet '("verb"))
+;;  (earley:load-lexicon-from-string book-token-line))
+
+(make-lexicon :token-dict token-dict :token-alphabet '("verb"))
+(earley:load-lexicon-from-string book-token-line)
 
 (end-tests)
