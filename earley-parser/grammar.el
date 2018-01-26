@@ -4,20 +4,19 @@
 (require 'load-relative)
 (load-relative "./tokens")
 
-;; The context free grammar representation is a hashtable keyed on non-terminal
-;; symbols. For each symbol there is a list of productions/rules for that
-;; symbol. The productions take the form of a ordered list of symbols.
+;; Our Context Free Grammar representation is a hashtable keyed by
+;; nonterminal name. For each nonterminal name, there is a list of
+;; right-hand sides of the rules for that nonterminal. The right-hand
+;; side of a grammar rule is an ordered list of symbols.
 ;;
-;; The non-terminal symbols are represented as strings.
+;; The non-terminal names are strings.
 
+;; The lexicon contains all tokens that have been seen in the input.
+;; It is a hashtable keyed by token name. For each token name, there is
+;; a list of the specific tokens (i.e. name and attributes) that have been
+;; seen in the input set.
 
-;; The lexicon is the representation of all terminal symbols (words in the
-;; language). It is a hashtable keyed on word. For each word there is a list
-;; of "terminal" structures that are different semantic mappings of the word.
-
-
-
-;; ;;;; Backus-Naur Form grammar reader functions
+;; ;;;; BNF Grammar-reading functions
 ;; ;;;;------------------------------------------
 ;; (defun load-bnf-grammar (pathname)
 ;;   "Reads a grammar on Backus-Naur form into the representation of the context
@@ -70,8 +69,8 @@
 ;;       (reverse production))))
 
 (defun earley:read-next-grammar-token (&optional opt-buffer keep-newline)
-  "Reads and returns the next grammr token from the current buffer.
-   buffer should be a BNF grammar."
+  "Reads and returns the next grammr token from the opt-buffer or
+  current buffer if that is not set. The buffer should be a BNF grammar."
   (let ((token "")
 	(buffer (or opt-buffer (current-buffer))))
     (with-current-buffer buffer
