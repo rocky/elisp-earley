@@ -46,64 +46,68 @@
 ;; 		       (inject-expansions! (cddr production) nil))))
 ;;     (make-grammar :rules rules)))
 
-;; (let ((lexeme-cache))
+;; (let ((token-cache))
 ;;   (defun read-next-bnf-production (file &optional (keep-newline nil))
 ;;     "Reads and returns the next Backus-Naur production from file."
 ;;     (let ((production))
 ;;       ;; If there is anything in the cache, pop it off and add it to production
-;;       (loop until (null lexeme-cache)
-;; 	 do (push (pop lexeme-cache) production))
-;;       (loop for lexeme = (read-next-bnf-lexeme file keep-newline)
-;; 	 until (null lexeme)
+;;       (loop until (null token-cache)
+;; 	 do (push (pop token-cache) production))
+;;       (loop for token = (read-next-grammar-token file keep-newline)
+;; 	 until (null token)
 ;; 	 do (if
 ;; 	     ;; If we just read a "::=" and there already is one in the
-;; 	     ;; production -> Push it and last lexeme onto cahce instead of
+;; 	     ;; production -> Push it and last token onto cahce instead of
 ;; 	     ;; production
 ;; 	     (and
-;; 	      (equalp lexeme "::=") (cl-member lexeme production :test *string-comparer*))
+;; 	      (equalp token "::=") (cl-member token production :test *string-comparer*))
 ;; 	     (progn
-;; 	       (push lexeme lexeme-cache)
-;; 	       (push (pop production) lexeme-cache)
+;; 	       (push token token-cache)
+;; 	       (push (pop production) token-cache)
 ;; 	       (return))
-;; 	     ;; Otherwise -> Keep adding lexemes to the production
-;; 	     (push lexeme production)))
+;; 	     ;; Otherwise -> Keep adding tokens to the production
+;; 	     (push token production)))
 ;;       (reverse production))))
 
-;; (defun read-next-bnf-lexeme (file &optional (keep-newline nil))
-;;   "Reads and returns the next Backus-Naur lexeme from file."
-;;   (let ((whitespace (list " " "\t"))
-;; 	(lexeme ""))
-;;     (unless keep-newline (push "\n" " "))
-;;     (loop for char = (read-char file nil nil)
-;;        until (null char)
-;;        do (cond
-;; 	    ;; If the char is an '=' and the rest of the lexeme is already
-;; 	    ;; "::" -> Return lexeme
-;; 	    ((and (char-equal char "=") (string= lexeme "::"))
-;; 	     (setf lexeme (concatenate 'string lexeme (list char)))
-;; 	     (return))
-;; 	    ;; If the char is an '>' and lexeme starts with an '<' ->
-;; 	    ;; Return lexeme
-;; 	    ((and (char-equal char ">") (char-equal (char lexeme 0) "<"))
-;; 	     (setf lexeme (concatenate 'string lexeme (list char)))
-;; 	     (return))
-;; 	    ;; If the char is '|' it is in it self a complete lexeme
-;; 	    ((and (char-equal char "|") (= (length lexeme) 0))
-;; 	     (setf lexeme (concatenate 'string lexeme (list char)))
-;; 	     (return))
-;; 	    ;; Newlines are also (or may be) complete lexemes
-;; 	    ((and (char-equal char "\n") (= (length lexeme) 0)
-;; 		  keep-newline)
-;; 	     (setf lexeme (concatenate 'string lexeme (list char)))
-;; 	     (return))
-;; 	    ;; If the char is whitespace, and lexeme is empty ->
-;; 	    ;; Do nothing, just continue with the next char
-;; 	    ((and (cl-member char whitespace :test *string-comparer*)
-;; 		  (= (length lexeme) 0)))
-;; 	    ;; If nothing specific matches -> Add char to lexeme
-;; 	    (t
-;; 	     (setf lexeme (concatenate 'string lexeme (list char))))))
-;;     (when (> (length lexeme) 0) (string-trim (list "<" ">") lexeme))))
+(defun earley:read-next-grammar-token (&optional opt-buffer keep-newline)
+  "Reads and returns the next grammr token from the current buffer.
+   buffer should be a BNF grammar."
+  (let ((token "")
+	(buffer (or opt-buffer (current-buffer))))
+    (with-current-buffer buffer
+      (loop for char = (char-after)
+	    until (eobp)
+	    do
+	    (forward-char 1)
+	    (cond
+	     ;; If the char is an '=' and the rest of the token is already
+	     ;; "::" -> Return token
+	     ((and (char-equal char ?=) (string= token "::"))
+	      (setf token (concat token (string char)))
+	      (return))
+	     ;; If the char is an '>' and token starts with an '<' ->
+	     ;; Return token
+	     ((and (char-equal char ?>) (substring token 0 1) "<")
+	      (setf token (concat token (string char)))
+	      (return))
+	     ;; If the char is '|' it is in it self a complete token
+	     ((and (char-equal char ?|) (= (length token) 0))
+	      (setf token (concat token (string char)))
+	      (return))
+	     ;; Newlines are also (or may be) complete tokens
+	     ((and (char-equal char ?\n) (= (length token) 0)
+		   keep-newline)
+	      (setf token (concat token (string char)))
+	      (return))
+	     ;; If the char is whitespace, and token is empty ->
+	     ;; Do nothing, just continue with the next char
+	     ((and (string-match "^[ \t\n]" (string char))
+		   (= (length token) 0)))
+	     ;; If nothing specific matches -> Add char to token
+	     (t
+	      (setf token (concat token (string char))))))
+      (when (> (length token) 0)
+	(replace-regexp-in-string "^<\\(.+\\)>" "\\1" token)))))
 
 
 

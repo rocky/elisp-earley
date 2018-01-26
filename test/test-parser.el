@@ -13,12 +13,18 @@
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Lots of compiler boilerplate to reduce warnings
-(declare-function make-token   'realgud:tokens)
-(declare-function format-token 'realgud:tokens)
-(declare-function token-class  'realgud:tokens)
-(declare-function token-value  'realgud:tokens)
-(declare-function make-lexicon 'realgud:object)
-(declare-function make-grammar 'realgud:object)
+
+(declare-function format-token 'earley:tokens)
+(declare-function make-token   'earley:tokens)
+(declare-function token-class  'earley:tokens)
+(declare-function token-value  'earley:tokens)
+
+(declare-function lexicon-lookup         'earley:objects)
+(declare-function lexicon-token-alphabet 'earley:objects)
+(declare-function make-grammar           'earley:objects)
+(declare-function make-lexicon           'earley:objects)
+
+(declare-function earley:parse 'earley:parser)
 
 (declare-function earley:print-chart-listing  'earley:parser)
 (declare-function earley:chart-listing->trees 'earley:parser)
