@@ -13,4 +13,4 @@ install:
 
 # run the tests
 script:
-  - NO_CHECK_EMACS_PACKAGES=1 /bin/bash ./autogen.sh && cd test && make check-elget
+  - EMACS=emacs25 /bin/bash ./autogen.sh && cd test && make check-elget
