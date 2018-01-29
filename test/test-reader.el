@@ -3,6 +3,7 @@
 
 (require 'test-simple)
 (require 'load-relative)
+(require 'cl-lib)
 
 
 ;; Load file to force the most recent read. And don't use bytecode.
@@ -17,10 +18,15 @@
 (declare-function make-grammar 'earley:objects)
 (declare-function make-lexicon 'earley:objects)
 (declare-function earley:read-next-grammar-token 'earley:grammar)
+(declare-function earley:load-bnf-grammar        'earley:grammar)
+(declare-function grammar-rules-dict             'earley:grammar)
 
 (defvar book-token)
 (defvar book-token-line)
 (defvar token-dict)
+(defvar grammar-buffer)
+(defvar my-grammar)
+(defvar my-dir)
 
 ;;-------------------------------------------------------------
 ;; (defun lexicon-equal(a b)
@@ -60,5 +66,28 @@
     (kill-buffer temp-buffer)))
 
 (read-grammar-token-test)
+
+(setq my-dir (file-name-directory (__FILE__)))
+
+
+(setq grammar-buffer (create-file-buffer
+		      (concat "my-dir" "../examples/grammar.txt")))
+(setq my-grammar (earley:load-bnf-grammar grammar-buffer))
+(assert-t (grammar-rules-dict my-grammar))
+
+;; FIXME: check that the table is:
+;;   '("S"
+;;     (("NP" "VP")
+;;      ("VP")
+;;      ("Aux" "NP" "VP"))
+;;     "NP"
+;;     (("det" "nominal")
+;;      ("proper-noun"))
+;;     "VP"
+;;     (("verb")
+;;      ("verb" "NP"))
+;;     "nominal"
+;;     (("noun")
+;;      ("noun" "nominal"))))
 
 (end-tests)
