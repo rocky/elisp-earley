@@ -41,7 +41,7 @@
   "Earley Algorithm parser"
   :group 'processes
   :group 'tools
-  :version "24.3")
+  :version "25.1")
 
 ;; FIXME: extend require-relative for "autoload".
 (defun earley:load-features()
