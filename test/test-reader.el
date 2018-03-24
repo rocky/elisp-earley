@@ -53,6 +53,7 @@
 (defun read-grammar-token-test()
   (let ((temp-buffer (generate-new-buffer "*bnf-test*")))
     (with-current-buffer temp-buffer
+      (insert "# This is a comment\n")
       (insert "<S>       ::= <Aux> <NP> <VP> | <VP>\n")
       (goto-char (point-min)))
     (assert-equal "S" (earley:read-next-grammar-token temp-buffer))
@@ -69,25 +70,27 @@
 
 (setq my-dir (file-name-directory (__FILE__)))
 
-
-(setq grammar-buffer (create-file-buffer
-		      (concat "my-dir" "../examples/grammar.txt")))
+(setq grammar-buffer (find-file-noselect
+		      (concat my-dir "../examples/sentence.g4")))
 (setq my-grammar (earley:load-bnf-grammar grammar-buffer))
 (assert-t (grammar-rules-dict my-grammar))
 
-;; FIXME: check that the table is:
-;;   '("S"
-;;     (("NP" "VP")
-;;      ("VP")
-;;      ("Aux" "NP" "VP"))
-;;     "NP"
-;;     (("det" "nominal")
-;;      ("proper-noun"))
-;;     "VP"
-;;     (("verb")
-;;      ("verb" "NP"))
-;;     "nominal"
-;;     (("noun")
-;;      ("noun" "nominal"))))
+(assert-equal (grammar-productions "S" my-grammar)
+	      '(("NP" "VP")
+		("VP")
+		("Aux" "NP" "VP")))
+
+
+(assert-equal (grammar-productions "NP" my-grammar)
+	      '(("det" "nominal")
+		("proper-noun")))
+
+(assert-equal (grammar-productions "VP" my-grammar)
+	      '(("verb")
+		("verb" "NP")))
+
+(assert-equal (grammar-productions "nominal" my-grammar)
+	      '(("noun")
+	       ("noun" "nominal")))
 
 (end-tests)

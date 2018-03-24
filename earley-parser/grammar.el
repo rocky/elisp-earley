@@ -48,28 +48,32 @@
 		       (inject-expansions! (cddr production) nil))))
     (make-grammar :rules-dict rules-dict)))
 
-(let ((token-cache))
-  (defun read-next-bnf-production (buffer)
-    "Reads and returns the next Backus-Naur production from file."
-    (let ((production))
-      ;; If there is anything in the cache, pop it off and add it to production
-      (loop until (null token-cache)
-	 do (push (pop token-cache) production))
-      (loop for token = (earley:read-next-grammar-token buffer)
-	 until (null token)
-	 do (if
-	     ;; If we just read a "::=" and there already is one in the
-	     ;; production -> Push it and last token onto cahce instead of
-	     ;; production
-	     (and
-	      (equalp token "::=") (cl-member token production :test 'equal))
-	     (progn
-	       (push token token-cache)
-	       (push (pop production) token-cache)
-	       (return))
-	     ;; Otherwise -> Keep adding tokens to the production
-	     (push token production)))
-      (reverse production))))
+(setq token-cache nil)
+(defun read-next-bnf-production (buffer)
+  "Reads and returns the next Backus-Naur production from file."
+  (let ((production))
+    ;; If there is anything in the cache, pop it off and add it to production
+    (loop until (null token-cache)
+	  do (push (pop token-cache) production))
+    (loop for token = (earley:read-next-grammar-token buffer)
+	  until (null token)
+	  do (if
+		 ;; If we just read a "::=" and there already is one in the
+		 ;; production -> Push it and last token onto cahce instead of
+		 ;; production
+		 (and
+		  (equalp token "::=") (cl-member token production :test 'equal))
+		 (progn
+		   (push token token-cache)
+		   (push (pop production) token-cache)
+		   (return))
+	       ;; Otherwise -> Keep adding tokens to the production
+	       (push token production)))
+    (reverse production)))
+
+(defun earley:at-comment?()
+  "Return true if we are positioned at a comment"
+  (or (looking-at "^#\\|^//")))
 
 (defun earley:read-next-grammar-token (&optional opt-buffer keep-newline)
   "Reads and returns the next grammr token from the opt-buffer or
@@ -77,11 +81,18 @@
   (let ((token "")
 	(buffer (or opt-buffer (current-buffer))))
     (with-current-buffer buffer
+      (when (earley:at-comment?)
+	(end-of-line))
       (loop for char = (char-after)
 	    until (eobp)
 	    do
 	    (forward-char 1)
 	    (cond
+
+	     ;; Is this a comment?
+	     ((earley:at-comment?)
+	      (end-of-line))
+
 	     ;; If the char is an '=' and the rest of the token is already
 	     ;; "::" -> Return token
 	     ((and (char-equal char ?=) (string= token "::"))
