@@ -3,24 +3,27 @@
 // This grammar is taken from our elisp decompiler
 //
 
-exprs ::= exprs expr_stmt | expr_stmt
+<exprs> ::= <exprs> <expr_stmt> | <expr_stmt>
 
-expr_stmt   ::= expr opt_discard
-opt_discard ::= DISCARD |
-
-expr  ::= DUP
+<expr_stmt>   ::= <expr> | <expr> <DISCARD>
 
 // Expressions
-expr  ::= binary_expr
-expr  ::= unary_expr
-expr  ::= nullary_op
 
-binary_expr ::= expr expr binary_op
+<expr>  ::= <binary_expr>
+<expr>  ::= <unary_expr>
+<expr>  ::= <nullary_op>
 
-binary_op ::= DIFF
-binary_op ::= EQLSIGN
+<binary_expr> ::= <expr> <expr> <binary_op>
 
-unary_op ::= ADD1
-unary_op ::= CAR
+// Binary operators
+<binary_op> ::= <DIFF>
+<binary_op> ::= <EQLSIGN>
 
-nullary_op ::= POINT
+// Unary operators
+<unary_op> ::= <ADD1>
+<unary_op> ::= <CAR>
+
+
+// Nulary operators
+<nullary_op> ::= <POINT>
+<nullary_op> ::= <DUP>

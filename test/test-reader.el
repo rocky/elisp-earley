@@ -19,6 +19,7 @@
 (declare-function make-lexicon 'earley:objects)
 (declare-function earley:read-next-grammar-token 'earley:grammar)
 (declare-function earley:read-grammar-file       'earley:grammar)
+(declare-function grammar-productions            'earley:grammar)
 (declare-function grammar-rules-dict             'earley:grammar)
 
 (eval-when-compile
@@ -92,6 +93,13 @@
 
 (assert-equal (grammar-productions "nominal" my-grammar)
 	      '(("noun")
-	       ("noun" "nominal")))
+		("noun" "nominal")))
+
+(setq grammar-path (concat my-dir "../examples/elisp.g4"))
+(setq my-grammar (earley:read-grammar-file grammar-path))
+
+(assert-equal (grammar-productions "binary_op" my-grammar)
+	      '(("EQLSIGN")
+		("DIFF")))
 
 (end-tests)

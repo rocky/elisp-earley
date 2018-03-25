@@ -1,0 +1,9 @@
+0       :class <num>
+1       :class <num>
+2       :class <num>
+ADD1    :class <op>
+CAR     :class <op>
+DIFF    :class <op>
+DISCARD :class <op>
+DUP     :class <op>
+POINT   :class <op>
