@@ -19,7 +19,7 @@
 (declare-function token-class  'earley:tokens)
 (declare-function token-value  'earley:tokens)
 
-(declare-function lexicon-lookup         'earley:objects)
+(declare-function token-lookup           'earley:objects)
 (declare-function lexicon-token-alphabet 'earley:objects)
 (declare-function make-grammar           'earley:objects)
 (declare-function make-lexicon           'earley:objects)
@@ -74,7 +74,7 @@
       (make-lexicon :token-dict token-dict :token-alphabet token-alphabet))
 
 (assert-equal '("OP" "NUMBER") (lexicon-token-alphabet my-lexicon))
-(assert-equal (list number-token) (lexicon-lookup "1" my-lexicon))
+(assert-equal (list number-token) (token-lookup "1" my-lexicon))
 
 ;; 'rules-dict' will contain our all of our grammar rules
 ;; the key is the LHS and the value is a list of RHS for that LHS
@@ -111,15 +111,23 @@
     ("NUMBER" "1")))
  (earley:chart-listing->trees chart-listing))
 
-;; FIXME try a grammar with epsilon transitions
-;;
-;; (assert-equal '(("S" nil)) (earley:chart-listing->trees chart-listing))
+(setq chart-listing (earley:parse "1 + 1 - 1" my-grammar my-lexicon))
+(assert-equal
+ '(("S"
+    ("S"
+     ("S"
+      ("NUMBER" "1"))
+     ("OP" "+")
+     ("NUMBER" "1"))
+    ("OP" "-")
+    ("NUMBER" "1")))
+ (earley:chart-listing->trees chart-listing))
 
-;; FiXME: test that this fails
+(note "Null input with epsilon transition")
+(setq chart-listing (earley:parse "" my-grammar my-lexicon))
+(assert-equal nil (earley:chart-listing->trees chart-listing))
+
+;; FIXME: test that this fails
 ;; (setq char-listing (earley:parse "1 + 1 -" my-grammar my-lexicon))
-
-;; FiXME: test that this words
-;; (setq char-listing (earley:parse "1 + 1 - 1" my-grammar my-lexicon))
-
 
 (end-tests)

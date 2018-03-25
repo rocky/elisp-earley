@@ -7,7 +7,11 @@ include common.mk
 #: Run all tests
 test: check
 
-check check-short:
+#: Run all tests with minimum verbosity
+check-short:
+	$(MAKE) check 2>&1  | ruby test/make-check-filter.rb
+
+check:
 	$(MAKE) -C test $@
 
 # #: Run "make install" non-verbosely

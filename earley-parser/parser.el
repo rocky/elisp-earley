@@ -61,21 +61,21 @@
 		    (chart-listing chart-listing)
 		    (lexicon lexicon))
   "Check if the next symbol of `state' is a member of the
- post-categories for the current word. As a side effect, queue
+ post-categories for the current token. As a side effect, queue
  a new state corresponding to th is find, into the current
  chart."
   (let* ((follow (follow-symbol state))
          (j (state-dot-index state))
-         (word (nth j tokens)))
+         (token (nth j tokens)))
     (when (> earley:debug 2)
       (earley:msg
        (format "  scanner checking if \"%s\" is in %s"
 	       follow
-	       (format-token-list (lexicon-lookup word lexicon)))))
-    (when (cl-member follow (lexicon-lookup word lexicon)
+	       (format-token-list (token-lookup token lexicon)))))
+    (when (cl-member follow (token-lookup token lexicon)
 		  :test 'follow-match?)
       (let ((new-state (make-state :lhs follow
-				   :rhs (list word)
+				   :rhs (list token)
 				   :dot 1
 				   :constituent-index j
 				   :dot-index (+ j 1))))
@@ -133,7 +133,7 @@ added to the chart-list."
 
     (earley:msg-clear)
     ;; (setf (chart-listing-goal-symbol chart-listing) goal-symbol)
-    ;; Initialize charts, one chart per word in the sentence
+    ;; Initialize charts, one chart per token in the sentence
     (loop for i from 0 to (length tokens)
        do (earley:add-chart (make-chart) chart-listing))
 
@@ -145,7 +145,7 @@ added to the chart-list."
 				:dot-index 0)
 		    (nth 0 (chart-listing-charts chart-listing)))
 
-    ;; Then for each chart (= one per word)...
+    ;; Then for each chart (= one per token)...
     (loop for chart in (chart-listing-charts chart-listing)
        and chart-index from 0
        ;; And for each possible state in that chart

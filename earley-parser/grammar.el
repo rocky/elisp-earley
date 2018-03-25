@@ -19,7 +19,12 @@
 
 ;;;; BNF Grammar-reading functions
 ;;;;------------------------------------------
-(defun earley:load-bnf-grammar (buffer)
+(defun earley:read-grammar-file (path)
+  "Reads a BNF grammar file into a buffer and parses
+the grammar file"
+  (earley:read-grammar-buffer(find-file-noselect path)))
+
+(defun earley:read-grammar-buffer (buffer)
   "Reads a BNF grammar into the our representation internal context free grammar
    representation."
   (interactive "b")
@@ -123,15 +128,15 @@
 	(replace-regexp-in-string "^<\\(.+\\)>" "\\1" token)))))
 
 
-
-;;;; Lexicon functions
-;;;;------------------
-;;;; Reads a dictionary on the form:
-;;;;
-;;;; <token-name> :class <class>
-;;;;
-;;;; into a hashtable of lists of tokens and
-;;;; a list of word classes (part of speech).
+;;; Token-symbol definition functions
+;;;-----------------------------------
+;;; Creates token definitions by reading in
+;;; a token definition file. The file is
+;;; in the form:
+;;;    <token-name> :class <class>
+;;;
+;;; A hastable of lists of tokens and their
+;;; classes is returned.
 
 (cl-defmethod earley:parse-lexicon-line ((line string))
   "Parse the string of the form:

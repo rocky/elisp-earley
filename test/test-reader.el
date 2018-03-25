@@ -18,15 +18,17 @@
 (declare-function make-grammar 'earley:objects)
 (declare-function make-lexicon 'earley:objects)
 (declare-function earley:read-next-grammar-token 'earley:grammar)
-(declare-function earley:load-bnf-grammar        'earley:grammar)
+(declare-function earley:read-grammar-file       'earley:grammar)
 (declare-function grammar-rules-dict             'earley:grammar)
 
-(defvar book-token)
-(defvar book-token-line)
-(defvar token-dict)
-(defvar grammar-buffer)
-(defvar my-grammar)
-(defvar my-dir)
+(eval-when-compile
+  (defvar book-token)
+  (defvar book-token-line)
+  (defvar token-dict)
+  (defvar grammar-buffer)
+  (defvar my-grammar)
+  (defvar my-dir)
+  (defvar grammar-path))
 
 ;;-------------------------------------------------------------
 ;; (defun lexicon-equal(a b)
@@ -70,9 +72,8 @@
 
 (setq my-dir (file-name-directory (__FILE__)))
 
-(setq grammar-buffer (find-file-noselect
-		      (concat my-dir "../examples/sentence.g4")))
-(setq my-grammar (earley:load-bnf-grammar grammar-buffer))
+(setq grammar-path (concat my-dir "../examples/sentence.g4"))
+(setq my-grammar (earley:read-grammar-file grammar-path))
 (assert-t (grammar-rules-dict my-grammar))
 
 (assert-equal (grammar-productions "S" my-grammar)

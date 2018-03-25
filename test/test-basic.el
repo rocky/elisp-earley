@@ -88,7 +88,7 @@
 (setq lexicon (make-lexicon :token-dict token-dict :token-alphabet token-alphabet))
 
 (assert-equal '("noun") (lexicon-token-alphabet lexicon))
-(lexicon-lookup "Test" lexicon)
+(token-lookup "Test" lexicon)
 
 (setq c (make-chart))
 (setq chart-listing (make-chart-listing))

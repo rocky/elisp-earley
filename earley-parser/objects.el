@@ -77,7 +77,7 @@
 ;;     (make-lexicon :token-dict token-dict
 ;; 		  :token-alphabet token-alphabet)))
 
-(defun lexicon-lookup (token lexicon)
+(defun token-lookup (token lexicon)
   (gethash token (lexicon-token-dict lexicon)))
 
 ;;;; representation of a parse state
